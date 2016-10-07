@@ -1,0 +1,7 @@
+core
+vgcore.*
+*~
+*.swp
+*.pyc
+__pycache__
+dataset*

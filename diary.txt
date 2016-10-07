@@ -1,0 +1,1 @@
+05/10/16	18:00	18:15	put the first real entry in diary.txt (delete this line!)
