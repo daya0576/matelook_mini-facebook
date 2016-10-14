@@ -7,46 +7,41 @@
 use CGI qw/:all/;
 use CGI::Carp qw/fatalsToBrowser warningsToBrowser/;
 
-
 sub main() {
-    # print start of HTML ASAP to assist debugging if there is an error in the script
-    print page_header();
-    
-    # Now tell CGI::Carp to embed any warning in HTML
-    warningsToBrowser(1);
-    
-    # define some global variables
-    $debug = 1;
-    $users_dir = "dataset-medium";
-    
-    print user_page();
-    print page_trailer();
+	# print start of HTML ASAP to assist debugging if there is an error in the script
+	print page_header();
+	
+	# Now tell CGI::Carp to embed any warning in HTML
+	warningsToBrowser(1);
+	
+	# define some global variables
+	$debug = 1;
+	$users_dir = "dataset-medium";
+	
+	print user_page();
+	print page_trailer();
 }
 
 
 #
-# Show unformatted details for user "n".
+# Show unformatted user for user "n".
 # Increment parameter n and store it as a hidden variable
 #
 sub user_page {
     my $n = param('n') || 0;
     my @users = sort(glob("$users_dir/*"));
     my $user_to_show  = $users[$n % @users];
-    my $details_filename = "$user_to_show/user.txt";
-    open my $p, "$details_filename" or die "can not open $details_filename: $!";
-    $details = join '', <$p>;
+    my $user_filename = "$user_to_show/user.txt";
+    open my $p, "$user_filename" or die "can not open $user_filename: $!";
+    $user = join '', <$p>;
     close $p;
-    my $next_user = $n + 1;
-    return <<eof
-<div class="matelook_user_details">
-$details
-</div>
-<p>
-<form method="POST" action="">
-    <input type="hidden" name="n" value="$next_user">
-    <input type="submit" value="Next user" class="matelook_button">
-</form>
-eof
+    param('n', $n + 1);
+    return div({-class => "matelook_user_details"}, "\n$user\n"), "\n",
+        '<p>'.
+        start_form, "\n",
+        hidden('n'), "\n",
+        submit({-class => "matelook_button", -value => 'Next user'}), "\n",
+        end_form, "\n";
 }
 
 
@@ -54,20 +49,9 @@ eof
 # HTML placed at the top of every page
 #
 sub page_header {
-    return <<eof
-Content-Type: text/html;charset=utf-8
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>matelook</title>
-<link href="matelook.css" rel="stylesheet">
-</head>
-<body>
-<div class="matelook_heading">
-matelook
-</div>
-eof
+    return header(-charset => "utf-8"),
+        start_html(-title => 'matelook', -style => "matelook.css"),
+        div({-class => "matelook_heading"}, "matelook");
 }
 
 
@@ -84,3 +68,4 @@ sub page_trailer {
 }
 
 main();
+
