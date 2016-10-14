@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block title %}User profile{% endblock %}
+
+{% block body %}
+    <h3>Profile:</h3>
+    {% if user_entity %}
+        <img src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ user_entity.profile_img }}"
+             width="100px"
+             alt=""> <br>
+        zid: {{ user_entity.zid }}<br>
+        full_name: {{ user_entity.full_name }}<br>
+        birthday: {{ user_entity.birthday }}<br>
+        home_suburb: {{ user_entity.home_suburb }}<br>
+        program: {{ user_entity.program }}<br>
+    {% else %}
+        This user does not exit.
+    {% endif %}
+
+    <h3>POSTS:</h3>
+
+{% endblock %}
