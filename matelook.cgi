@@ -55,7 +55,7 @@ eof
 #
 sub page_header {
     return <<eof
-Content-Type: text/html
+Content-Type: text/html;charset=utf-8
 
 <!DOCTYPE html>
 <html lang="en">
