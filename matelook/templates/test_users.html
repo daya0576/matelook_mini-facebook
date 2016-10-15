@@ -2,20 +2,33 @@
 {% block title %}User profile{% endblock %}
 
 {% block body %}
-    <h3>Profile:</h3>
-    {% if user_entity %}
-        <img src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ user_entity.profile_img }}"
+    {% if user_info %}
+        <h3>Profile:</h3>
+        <img src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
              width="100px"
              alt=""> <br>
-        zid: {{ user_entity.zid }}<br>
-        full_name: {{ user_entity.full_name }}<br>
-        birthday: {{ user_entity.birthday }}<br>
-        home_suburb: {{ user_entity.home_suburb }}<br>
-        program: {{ user_entity.program }}<br>
+        zid: {{ user_info.zid }}<br>
+        full_name: {{ user_info.full_name }}<br>
+        birthday: {{ user_info.birthday }}<br>
+        home_suburb: {{ user_info.home_suburb }}<br>
+        program: {{ user_info.program }}<br>
+
+        <h3>POSTS:</h3>
+        {% for post in user_posts %}
+            {{ post.time }}<br>
+            {{ post.message }}<br>
+            <br>
+        {% endfor %}
+
+        <h3>Friends:</h3>
+        {% for mate in user_mates %}
+            <a href="{{ url_for('user_profile', user_zid=mate.mate) }}">{{ mate.mate }}</a>
+            <br>
+        {% endfor %}
+
     {% else %}
         This user does not exit.
     {% endif %}
 
-    <h3>POSTS:</h3>
 
 {% endblock %}

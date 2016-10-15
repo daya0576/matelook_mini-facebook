@@ -36,3 +36,15 @@ CREATE TABLE ENROLLMENT
     course TEXT
 );
 
+
+
+drop table if exists POST;
+CREATE TABLE POST
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    zid TEXT  REFERENCES USER(zid),
+    time TEXT,
+    latitude TEXT,
+    longitude TEXT,
+    message TEXT
+);

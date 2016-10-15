@@ -1,6 +1,17 @@
 <!doctype html>
 <title>{% block title %}Welcome{% endblock %} | Matelook</title>
 {#<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">#}
+
+{% if session['logged_in'] %}
+    U have already login:
+    <a href="{{ url_for('user_profile', user_zid=g.user.zid) }}">{{ g.user.zid }}</a>
+    <br>
+    <a href="{{ url_for('logout') }}">Log out</a><br>
+{% else %}
+    <a href="{{ url_for('login') }}">Login</a><br>
+    {#<a href="{{ url_for('sign_up') }}"></a>#}
+{% endif %}
+
 <div class=page>
   <div class="body">
     {% block body %}{% endblock %}
