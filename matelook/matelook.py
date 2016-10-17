@@ -70,7 +70,7 @@ def user_profile(user_zid):
     user_info = query_db('SELECT * FROM USER WHERE zid = ?',
                          [user_zid], one=True)
 
-    user_posts = query_db('SELECT * FROM POST WHERE zid = ?', [user_zid])
+    user_posts = query_db('SELECT * FROM POST WHERE zid = ? ORDER BY time', [user_zid])
 
     user_mates = query_db('SELECT * FROM MATES WHERE zid = ?', [user_zid])
 
