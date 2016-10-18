@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}User profile{% endblock %}
+{% block title %}Profile{% endblock %}
 
 {% block body %}
     {% if user_info %}
@@ -7,6 +7,7 @@
         <img src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
              width="100px"
              alt=""> <br>
+        {# Private information such e-mail, password, lat, long and courses should not be displayed. #}
         zid: {{ user_info.zid }}<br>
         full_name: {{ user_info.full_name }}<br>
         birthday: {{ user_info.birthday }}<br>
@@ -22,8 +23,17 @@
 
         <h3>Friends:</h3>
         {% for mate in user_mates %}
-            <a href="{{ url_for('user_profile', user_zid=mate.mate) }}">{{ mate.mate }}</a>
-            <br>
+            {% if mate.full_name %}
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=mate.mate_zid) }}">
+                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ mate.profile_img }}">
+                </a>
+                <a href="{{ url_for('user_profile', user_zid=mate.mate) }}">{{ mate.full_name }}</a>
+                <br>
+            {% else %}
+                <a>{{ mate.mate_zid }}(user dose not exist)</a>
+
+                <br>
+            {% endif %}
         {% endfor %}
 
     {% else %}

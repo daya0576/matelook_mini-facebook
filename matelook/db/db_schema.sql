@@ -24,8 +24,8 @@ create table USER (
 drop table if exists MATES;
 CREATE TABLE MATES (
     id INTEGER PRIMARY KEY   AUTOINCREMENT,
-    zid TEXT REFERENCES USER(zid),
-    mate TEXT
+    user_zid TEXT REFERENCES USER(zid),
+    mate_zid TEXT
 );
 
 drop table if exists ENROLLMENT;

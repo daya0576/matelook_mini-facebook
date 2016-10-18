@@ -2,6 +2,20 @@
 {% block title %}Index{% endblock %}
 
 {% block body %}
-    <h3>Index</h3>
+    {% if all_mate_posts %}
+        <h3>POSTS:</h3>
+        {% for post in all_mate_posts %}
+            <a class="profile_a" href="{{ url_for('user_profile', user_zid=post.zid) }}">
+                <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ post.profile_img }}">
+            </a>
+            <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
+            {{ post.time }}<br>
+            {{ post.message }}<br>
+            <br>
+        {% endfor %}
+    {% else %}
+        Nothing new with your friends.
+    {% endif %}
+
 
 {% endblock %}

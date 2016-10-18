@@ -1,4 +1,4 @@
-nav .profile_img {
+.profile_img {
     border-radius: 4px;
     width: 32px;
     height: 32px;
@@ -6,7 +6,7 @@ nav .profile_img {
     margin-top: 9px;
 }
 
-nav .profile_a {
+.profile_a {
     color: red;
     padding-bottom: 0 !important;
     padding-top: 0 !important;

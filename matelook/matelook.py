@@ -62,7 +62,14 @@ def close_db(error):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    if 'logged_in' in session:
+        user_zid = session['logged_in']
+        all_mate_posts = query_db('SELECT time, message, full_name, m.mate_zid as zid, profile_img '
+                                  'FROM POST p JOIN MATES m ON p.zid = m.mate_zid JOIN USER u ON u.zid=p.zid '
+                                  'WHERE m.user_zid= ? '
+                                  'ORDER BY time DESC LIMIT 10', [user_zid])
+
+    return render_template('index.html', all_mate_posts=all_mate_posts)
 
 
 @app.route('/user/<user_zid>')
@@ -70,9 +77,11 @@ def user_profile(user_zid):
     user_info = query_db('SELECT * FROM USER WHERE zid = ?',
                          [user_zid], one=True)
 
-    user_posts = query_db('SELECT * FROM POST WHERE zid = ? ORDER BY time', [user_zid])
+    user_posts = query_db('SELECT * FROM POST WHERE zid = ? ORDER BY time DESC', [user_zid])
 
-    user_mates = query_db('SELECT * FROM MATES WHERE zid = ?', [user_zid])
+    user_mates = query_db('SELECT * FROM MATES m '
+                          'LEFT JOIN USER u ON m.mate_zid = u.zid '
+                          'WHERE m.user_zid = ?', [user_zid])
 
     return render_template('test_users.html',
                            user_info=user_info,
@@ -112,6 +121,20 @@ def logout():
     flash('You were logged out')
     session.pop('logged_in', None)
     return redirect(url_for('index'))
+
+
+@app.route('/search', methods=['GET'])
+def search():
+    print("searching")
+    """Searching for a user whose name containing a specified substring."""
+    suggestion = request.args.get('search')
+    if suggestion:
+        print("Searching ", suggestion)
+        search_users = query_db('SELECT * FROM USER WHERE full_name LIKE "%' + suggestion + '%"')
+    else:
+        print("no suggestion")
+
+    return render_template('search_result.html', search_users=search_users)
 
 
 if __name__ == '__main__':

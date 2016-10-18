@@ -27,8 +27,8 @@
             {#<a href="{{ url_for('sign_up') }}"></a>#}
         {% endif %}
       </ul>
-      <form class="navbar-form navbar-right">
-        <input type="text" class="form-control" placeholder="Search...">
+      <form action="/search" class="navbar-form navbar-right">
+        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request.args.search }}">
       </form>
     </div>
   </div>
