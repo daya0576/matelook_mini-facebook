@@ -111,15 +111,15 @@ def index():
         posts = posts[:10]
 
         for post in posts:
-            comments = query_db('SELECT * FROM COMMENT WHERE post_id=? '
-                                'ORDER BY time', [post["post_id"]])
+            comments = query_db('SELECT * FROM COMMENT c JOIN USER u ON c.zid=u.zid '
+                                'WHERE post_id=? ORDER BY time', [post["post_id"]])
             comments = [dict(row) for row in comments]
             post["comments"] = comments
 
             for comment in comments:
                 comment["message"] = add_zid_link(comment["message"])
-                replies = query_db('SELECT * FROM REPLY WHERE comment_id=? '
-                                   'ORDER BY time', [comment["id"]])
+                replies = query_db('SELECT * FROM REPLY r JOIN USER u ON r.zid=u.zid '
+                                   'WHERE comment_id=? ORDER BY time', [comment["id"]])
                 replies = [dict(row) for row in replies]
                 comment["replies"] = replies
 
@@ -184,17 +184,18 @@ def logout():
 
 @app.route('/search', methods=['GET'])
 def search():
-    print("searching")
-    """Searching for a user whose name containing a specified substring."""
+    """ Searching for a user whose name containing a specified substring.
+        Searching for posts containing particular words. """
     suggestion = request.args.get('search')
     if suggestion:
         # print("Searching ", suggestion)
         search_users = query_db('SELECT * FROM USER WHERE full_name LIKE "%' + suggestion + '%"')
-
+        search_posts = query_db('SELECT * FROM POST WHERE message LIKE "%' + suggestion + '%"')
     else:
         print("no suggestion")
 
-    return render_template('search_result.html', search_users=search_users)
+    return render_template('search_result.html',
+                           search_users=search_users, search_posts=search_posts)
 
 
 @app.route('/post', methods=['GET', 'POST'])

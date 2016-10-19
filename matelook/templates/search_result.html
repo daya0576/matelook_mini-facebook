@@ -3,19 +3,26 @@
 
 {% block body %}
 
-    <h3>Friends:</h3>
-    {% for mate in search_users %}
-        {% if mate.full_name %}
-            <a class="profile_a" href="{{ url_for('user_profile', user_zid=mate.zid) }}">
-                <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ mate.profile_img }}">
-            </a>
-            <a href="{{ url_for('user_profile', user_zid=mate.zid) }}">{{ mate.full_name }}</a>
-            <br>
-        {% else %}
-            <a>{{ mate.mate_zid }}(user dose not exist)</a>
+    {% if search_users %}
+        <h3>Users:</h3>
+        {% for user in search_users %}
+            {% if user.full_name %}
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=mate.zid) }}">
+                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ mate.profile_img }}">
+                </a>
+                <a href="{{ url_for('user_profile', user_zid=mate.zid) }}">{{ mate.full_name }}</a>
+                <br>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    {% if search_posts %}
+        <h3>Posts:</h3>
+        {% for post in search_posts %}
+            <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
+            {{ post.time }}<br>
+            {{ post.message|safe }}<br>
 
-            <br>
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
 
 {% endblock %}
