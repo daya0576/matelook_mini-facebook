@@ -2,38 +2,46 @@
 {% block title %}Index{% endblock %}
 
 {% block body %}
-    {% if posts %}
-        <h3>POSTS:</h3>
-        {% for post in posts %}
-            <a class="profile_a" href="{{ url_for('user_profile', user_zid=post.zid) }}">
-                <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ post.profile_img }}">
-            </a>
-            <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
-            {{ post.time }}<br>
-            {{ post.message|safe }}<br>
+    {% if session['logged_in'] %}
+        <h3>New Post</h3>
+        <form action="/post" method="post">
+            <textarea name="message" rows="4" cols="50"></textarea>
 
-            {% if post.comments %}
-                {% for comment in post.comments %}
-                    <div style="padding-left: 40px">{{ comment.zid }} {{ comment.time }} </div>
-                    <div style="padding-left: 40px">{{ comment.message|safe }}</div>
+            <div class="actions"><input type="submit" value="Post"></div>
+        </form>
+        {% if posts %}
+            <h3>POSTS:</h3>
+            {% for post in posts %}
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=post.zid) }}">
+                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ post.profile_img }}">
+                </a>
+                <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
+                {{ post.time }}<br>
+                {{ post.message|safe }}<br>
 
-                    {% if comment.replies %}
-                        {% for reply in comment.replies %}
-                            <div style="padding-left: 80px">{{ reply.zid }} {{ reply.time }} <br></div>
-                            <div style="padding-left: 80px">{{ reply.message|safe }}<br></div>
-                        {% endfor %}
-                    {% endif %}
+                {% if post.comments %}
+                    {% for comment in post.comments %}
+                        <div style="padding-left: 40px">{{ comment.zid }} {{ comment.time }} </div>
+                        <div style="padding-left: 40px">{{ comment.message|safe }}</div>
 
-                    <br>
-                {% endfor %}
-            {% endif %}
+                        {% if comment.replies %}
+                            {% for reply in comment.replies %}
+                                <div style="padding-left: 80px">{{ reply.zid }} {{ reply.time }} <br></div>
+                                <div style="padding-left: 80px">{{ reply.message|safe }}<br></div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <br>
+                    {% endfor %}
+                {% endif %}
 
 
 
-            <br>
-        {% endfor %}
-    {% else %}
-        Nothing new with your friends.
+                <br>
+            {% endfor %}
+        {% else %}
+            Nothing new with your friends.
+        {% endif %}
     {% endif %}
 
 

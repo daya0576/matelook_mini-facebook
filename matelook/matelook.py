@@ -3,9 +3,12 @@
 
 # all the imports
 import os, re
+import datetime
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
+
+from common import time_date2txt
 
 # create our little application :)
 app = Flask(__name__)
@@ -123,7 +126,9 @@ def index():
                 for reply in replies:
                     reply["message"] = add_zid_link(reply["message"])
 
-    return render_template('index.html', posts=posts)
+        return render_template('index.html', posts=posts)
+    else:
+        return render_template('index.html')
 
 
 @app.route('/user/<user_zid>')
@@ -183,13 +188,31 @@ def search():
     """Searching for a user whose name containing a specified substring."""
     suggestion = request.args.get('search')
     if suggestion:
-        print("Searching ", suggestion)
+        # print("Searching ", suggestion)
         search_users = query_db('SELECT * FROM USER WHERE full_name LIKE "%' + suggestion + '%"')
+
     else:
         print("no suggestion")
 
     return render_template('search_result.html', search_users=search_users)
 
+
+@app.route('/post', methods=['GET', 'POST'])
+def post():
+    """Post new message"""
+    if session['logged_in'] and request.method == 'POST'\
+            and request.form['message'] != '' and request.form['message'] is not None:
+        user_zid = session['logged_in']
+        post_message = request.form['message']
+        # print('post_message: "{}"'.format(post_message))
+        cur_time_txt = time_date2txt()
+
+        db = get_db()
+        db.execute('INSERT INTO POST (zid, time, message) values (?, ?, ?)',
+                   [user_zid, cur_time_txt, post_message])
+        db.commit()
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run()
