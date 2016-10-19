@@ -2,15 +2,34 @@
 {% block title %}Index{% endblock %}
 
 {% block body %}
-    {% if all_mate_posts %}
+    {% if posts %}
         <h3>POSTS:</h3>
-        {% for post in all_mate_posts %}
+        {% for post in posts %}
             <a class="profile_a" href="{{ url_for('user_profile', user_zid=post.zid) }}">
                 <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ post.profile_img }}">
             </a>
             <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
             {{ post.time }}<br>
-            {{ post.message }}<br>
+            {{ post.message|safe }}<br>
+
+            {% if post.comments %}
+                {% for comment in post.comments %}
+                    <div style="padding-left: 40px">{{ comment.zid }} {{ comment.time }} </div>
+                    <div style="padding-left: 40px">{{ comment.message|safe }}</div>
+
+                    {% if comment.replies %}
+                        {% for reply in comment.replies %}
+                            <div style="padding-left: 80px">{{ reply.zid }} {{ reply.time }} <br></div>
+                            <div style="padding-left: 80px">{{ reply.message|safe }}<br></div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <br>
+                {% endfor %}
+            {% endif %}
+
+
+
             <br>
         {% endfor %}
     {% else %}

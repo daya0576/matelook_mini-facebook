@@ -19,8 +19,12 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
         {% if session['logged_in'] %}
-            <li><a class="profile_a" href="{{ url_for('user_profile', user_zid=g.user.zid) }}"><img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}"></a></li>
-            <li><a href="{{ url_for('user_profile', user_zid=g.user.zid) }}">{{ g.user.zid }}</a></li>
+            <li>
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=g.user.zid) }}">
+                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}">
+                </a>
+            </li>
+            <li><a href="{{ url_for('user_profile', user_zid=g.user.zid) }}">{{ g.user.full_name }}</a></li>
             <li><a href="{{ url_for('logout') }}">Log out</a></li>
         {% else %}
             <li><a href="{{ url_for('login') }}">Login</a></li>

@@ -31,7 +31,7 @@ CREATE TABLE MATES (
 drop table if exists ENROLLMENT;
 CREATE TABLE ENROLLMENT
 (
-    id INTEGER PRIMARY KEY   AUTOINCREMENT,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     zid TEXT  REFERENCES USER(zid),
     course TEXT
 );
@@ -41,10 +41,33 @@ CREATE TABLE ENROLLMENT
 drop table if exists POST;
 CREATE TABLE POST
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     zid TEXT  REFERENCES USER(zid),
     time TEXT,
     latitude TEXT,
     longitude TEXT,
     message TEXT
 );
+
+drop table if exists COMMENT;
+CREATE TABLE COMMENT
+(
+    id INTEGER PRIMARY KEY,
+    post_id INTEGER REFERENCES POST(id),
+    zid TEXT REFERENCES USER(zid),
+
+    time TEXT,
+    message TEXT
+);
+
+drop table if exists REPLY;
+CREATE TABLE REPLY
+(
+    id INTEGER PRIMARY KEY,
+    comment_id INTEGER REFERENCES COMMENT(id),
+    zid TEXT REFERENCES USER(zid),
+
+    time TEXT,
+    message TEXT
+);
+

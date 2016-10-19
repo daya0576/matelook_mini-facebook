@@ -1,5 +1,8 @@
+#!/usr/bin/env python3.5
+# -*- coding: utf-8 -*-
+
 # all the imports
-import os
+import os, re
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
@@ -45,6 +48,36 @@ def get_db():
     return g.sqlite_db
 
 
+def add_zid_link(text):
+    text_result = text
+    zids = re.findall(r'z[0-9]{7}', text)
+    for zid in zids:
+        user = query_db('select * from user where zid = ?',
+                        [zid], one=True)
+        if user:
+            zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
+            text_result = re.sub(zid, zid_html, text_result)
+        else:
+            print("user {} does not exist??".format(zid))
+
+    return text_result
+
+
+def get_user_posts(user_zid):
+    user_posts = query_db('SELECT p.id as post_id, time, message, full_name, u.zid as zid, profile_img '
+                          'FROM POST p JOIN USER u ON u.zid=p.zid WHERE u.zid = ? ORDER BY time DESC',
+                          [user_zid])
+    return user_posts
+
+
+def get_mate_posts(user_zid):
+    mate_posts = query_db('SELECT p.id as post_id, time, message, full_name, m.mate_zid as zid, profile_img '
+                          'FROM POST p JOIN MATES m ON p.zid = m.mate_zid JOIN USER u ON u.zid=p.zid '
+                          'WHERE m.user_zid= ? ORDER BY time DESC',
+                          [user_zid])
+    return mate_posts
+
+
 @app.before_request
 def before_request():
     g.user = None
@@ -64,12 +97,33 @@ def close_db(error):
 def index():
     if 'logged_in' in session:
         user_zid = session['logged_in']
-        all_mate_posts = query_db('SELECT time, message, full_name, m.mate_zid as zid, profile_img '
-                                  'FROM POST p JOIN MATES m ON p.zid = m.mate_zid JOIN USER u ON u.zid=p.zid '
-                                  'WHERE m.user_zid= ? '
-                                  'ORDER BY time DESC LIMIT 10', [user_zid])
+        mate_posts = get_mate_posts(user_zid)
+        user_posts = get_user_posts(user_zid)
 
-    return render_template('index.html', all_mate_posts=all_mate_posts)
+        ''' combine mate and user post, get top 10 by time '''
+        posts = user_posts+mate_posts
+        posts = [dict(row) for row in posts]
+
+        posts = sorted(posts, key=lambda x: x['time'], reverse=True)
+        posts = posts[:10]
+
+        for post in posts:
+            comments = query_db('SELECT * FROM COMMENT WHERE post_id=? '
+                                'ORDER BY time', [post["post_id"]])
+            comments = [dict(row) for row in comments]
+            post["comments"] = comments
+
+            for comment in comments:
+                comment["message"] = add_zid_link(comment["message"])
+                replies = query_db('SELECT * FROM REPLY WHERE comment_id=? '
+                                   'ORDER BY time', [comment["id"]])
+                replies = [dict(row) for row in replies]
+                comment["replies"] = replies
+
+                for reply in replies:
+                    reply["message"] = add_zid_link(reply["message"])
+
+    return render_template('index.html', posts=posts)
 
 
 @app.route('/user/<user_zid>')
@@ -77,7 +131,7 @@ def user_profile(user_zid):
     user_info = query_db('SELECT * FROM USER WHERE zid = ?',
                          [user_zid], one=True)
 
-    user_posts = query_db('SELECT * FROM POST WHERE zid = ? ORDER BY time DESC', [user_zid])
+    user_posts = get_user_posts(user_zid)
 
     user_mates = query_db('SELECT * FROM MATES m '
                           'LEFT JOIN USER u ON m.mate_zid = u.zid '
