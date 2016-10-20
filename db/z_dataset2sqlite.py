@@ -63,13 +63,13 @@ def get_user_dict(dataset, user):
     file_path = "{}/{}/user.txt".format(dataset, user)
     user_dict = dataset2dict(file_path)
 
-    check_dir("../static/profile_img/{}/".format(dataset))
-    check_dir("../static/profile_img/{}/{}/".format(dataset, user))
+    check_dir("../static/user/profile_img/{}/".format(dataset))
+    check_dir("../static/user/profile_img/{}/{}/".format(dataset, user))
 
     img_path = "{}/{}/profile.jpg".format(dataset, user)
     if os.path.exists(img_path):
         user_dict["profile_img"] = "{}/{}/profile.jpg".format(dataset, user)
-        os.system("cp {0}/{1}/profile.jpg ../static/profile_img/{0}/{1}/profile.jpg".format(dataset, user))
+        os.system("cp {0}/{1}/profile.jpg ../static/user/profile_img/{0}/{1}/profile.jpg".format(dataset, user))
     else:
         user_dict["profile_img"] = "default.png"
 

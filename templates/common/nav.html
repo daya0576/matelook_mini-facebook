@@ -12,7 +12,8 @@
         {% if session['logged_in'] %}
             <li>
                 <a class="profile_a" href="{{ url_for('user_profile', user_zid=g.user.zid) }}">
-                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}">
+                    <!--<img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}">-->
+                    <img class="profile_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}">
                 </a>
             </li>
             <li><a href="{{ url_for('user_profile', user_zid=g.user.zid) }}">{{ g.user.full_name }}</a></li>
