@@ -2,6 +2,8 @@
 {% block title %}Index{% endblock %}
 
 {% block body %}
+    <script src="{{ url_for('static', filename='js/posts.js') }}"></script>
+
     {% if session['logged_in'] %}
         <h3>New Post</h3>
         <form action="/post" method="post">

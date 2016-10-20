@@ -9,9 +9,13 @@
             </a>
             <br>
             <span class="post_time">{{ post.time }}</span>
-        </div>
 
-        <p class="post_message">{{ post.message|safe }}</p>
+            <p class="post_message">{{ post.message|safe }}</p>
+
+            {% if post.comments|length > 0 %}
+                <a onclick="show_comments(this)" class="comments_sum">{{ post.comments|length }} comments</a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="box_bottom">

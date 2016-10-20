@@ -60,6 +60,7 @@ def add_zid_link(text):
         if user:
             zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
             text_result = re.sub(zid, zid_html, text_result)
+            text_result = re.sub(r'\\n', '<br>', text_result)
         else:
             print("user {} does not exist??".format(zid))
 
