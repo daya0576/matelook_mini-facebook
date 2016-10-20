@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}Log In{% endblock %}
+
+{% block body %}
+    <h3>Log In</h3>
+
+    {% if session['logged_in'] %}
+        U have already login.
+    {% else %}
+        <form action="" method="post">
+            <dl>
+                <dt>Your Zid:
+                <dd><input type="text" name="zid" size="30" value="{{ request.form.zid }}">
+                <dt>Password:
+                <dd><input type="password" name="password" size="30">
+            </dl>
+            <div class="actions"><input type="submit" value="Log In"></div>
+        </form>
+        {% if error %}{{ error }}{% endif %}
+    {% endif %}
+
+
+{% endblock %}

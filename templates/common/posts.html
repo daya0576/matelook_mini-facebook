@@ -1,0 +1,78 @@
+{% for post in posts %}
+    <div class="box_top">
+        <div class="posts">
+            <a class="profile_a" href="{{ url_for('user_profile', user_zid=post.zid) }}">
+                <img class="profile_post_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ post.profile_img }}">
+            </a>
+            <a href="{{ url_for('user_profile', user_zid=post.zid) }}">
+                <strong>{{ post.full_name }}</strong>
+            </a>
+            <br>
+            <span class="post_time">{{ post.time }}</span>
+
+            <p class="post_message">{{ post.message|safe }}</p>
+
+            {% if post.comments|length > 0 %}
+                <a onclick="show_comments(this)" class="comments_sum">{{ post.comments|length }} comments</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="box_bottom">
+        {% if post.comments %}
+            <div class="comments">
+                {% for comment in post.comments %}
+                    <div class="comment">
+                        <a class="profile_a" href="{{ url_for('user_profile', user_zid=comment.zid) }}">
+                            {% if comment.profile_img %}
+                                <img width="20px" class="profile_post_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ comment.profile_img }}">
+                            {% else %}
+                                <img width="20px" class="profile_post_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/default.png">
+                            {% endif %}
+                        </a>
+
+                        <div class="message">
+                            <a href="{{ url_for('user_profile', user_zid=comment.zid) }}">
+                                <strong>{{ comment.full_name }}</strong>
+                            </a>
+                            <span>{{ comment.message|safe }}</span><br>
+
+                            <a href="#">reply</a><span> · </span>
+                            <span class="post_time">{{ comment.time }}</span>
+                        </div>
+
+                    </div>
+
+                    {% if comment.replies %}
+                        <div class="reply">
+                            {% for reply in comment.replies %}
+                                <div>
+                                    <a class="profile_a" href="{{ url_for('user_profile', user_zid=reply.zid) }}">
+                                        {% if reply.profile_img %}
+                                            <img width="20px" class="profile_post_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ reply.profile_img }}">
+                                        {% else %}
+                                            <img width="20px" class="profile_post_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/default.png">
+                                        {% endif %}
+                                    </a>
+                                    <div class="message">
+                                        <a href="{{ url_for('user_profile', user_zid=reply.zid) }}">
+                                            <strong>{{ reply.full_name }}</strong>
+                                        </a>
+                                        <span>{{ reply.message|safe }}</span><br>
+
+                                        <a href="#">reply</a><span> · </span>
+                                        <span class="post_time">{{ reply.time }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="height: 10px"></div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+        {% endif %}
+
+    </div>
+{% endfor %}
