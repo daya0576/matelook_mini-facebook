@@ -16,7 +16,7 @@ app.config.from_object(__name__)
 app.config.update(dict(
     PROFILE_IMG_DIR="profile_img",
     # DATABASE=os.path.join(app.root_path, 'db/small_sqlite.db'),
-    DATABASE=os.path.join(app.root_path, 'db/medium_sqlite.db'),
+    DATABASE=os.path.join(app.root_path, 'db/medium_SQLite.db'),
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',
