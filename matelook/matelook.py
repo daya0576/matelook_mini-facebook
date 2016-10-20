@@ -3,12 +3,10 @@
 
 # all the imports
 import os, re
-import datetime
+from datetime import datetime
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
-
-from common import time_date2txt
 
 # create our little application :)
 app = Flask(__name__)
@@ -24,6 +22,7 @@ app.config.update(dict(
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
+    SERVER_NAME='http://cgi.cse.unsw.edu.au/~z5082423',
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -51,6 +50,10 @@ def get_db():
     return g.sqlite_db
 
 
+def time_date2txt(cur_time=datetime.utcnow()):
+    return cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
+
+
 def add_zid_link(text):
     text_result = text
     zids = re.findall(r'z[0-9]{7}', text)
@@ -62,7 +65,8 @@ def add_zid_link(text):
             text_result = re.sub(zid, zid_html, text_result)
             text_result = re.sub(r'\\n', '<br>', text_result)
         else:
-            print("user {} does not exist??".format(zid))
+            pass
+            # print("user {} does not exist??".format(zid))
 
     return text_result
 
@@ -216,5 +220,5 @@ def post():
 
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
-    app.run()
+# if __name__ == '__main__':
+#     app.run()
