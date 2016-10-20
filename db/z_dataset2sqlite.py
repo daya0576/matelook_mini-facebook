@@ -1,8 +1,9 @@
 #!/usr/bin/env python3.5
 # -*- coding: utf-8 -*-
 
-import os, re
-import pprint
+import os
+import re
+import sys
 import sqlite3
 from collections import defaultdict
 
@@ -53,12 +54,17 @@ def dataset2dict(file_path):
     return item_dict
 
 
+def check_dir(dir):
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+
+
 def get_user_dict(dataset, user):
     file_path = "{}/{}/user.txt".format(dataset, user)
     user_dict = dataset2dict(file_path)
 
-    if not os.path.exists("../static/profile_img/{}/{}".format(dataset, user)):
-        os.mkdir("../static/profile_img/{}/{}".format(dataset, user))
+    check_dir("../static/profile_img/{}/".format(dataset))
+    check_dir("../static/profile_img/{}/{}/".format(dataset, user))
 
     img_path = "{}/{}/profile.jpg".format(dataset, user)
     if os.path.exists(img_path):
@@ -73,9 +79,19 @@ def get_user_dict(dataset, user):
 if __name__ == "__main__":
     # dataset = "dataset-small"
     # db_filename = "small_sqlite.db"
+    if len(sys.argv) < 2:
+        print("Usage: {} [dataset dir]".format(sys.argv[0]))
+        exit(1)
 
-    dataset = "dataset-large"
-    db_filename = "large_sqlite.db"
+    dataset = sys.argv[1]
+    if "large" in dataset:
+        db_filename = "large_SQLite.db"
+    elif "medium" in dataset:
+        db_filename = "medium_SQLite.db"
+    elif "small" in dataset:
+        db_filename = "small_SQLite.db"
+    else:
+        db_filename = "other_SQLite.db"
 
     users = [f for f in os.listdir(dataset)]
 
