@@ -31,12 +31,16 @@
         post_id = $(obj).attr('id');
         var comments_div = "#"+post_id+"_comments";
 
-        var comments_count = $(obj).text()
-        $(obj).text("loading..");
+        if($(comments_div).html() == ""){
+            var comments_count = $(obj).text();
+            $(obj).text("loading..");
 
-        $.get("{{ url_for('get_post_comments') }}", {post_id: post_id}, function(data){
-            $(comments_div).html(data);
-            $(obj).text(comments_count);
-        });
+            $.get("{{ url_for('get_post_comments') }}", {post_id: post_id}, function(data){
+                $(comments_div).html(data);
+                $(obj).text(comments_count);
+            });
+        }else{
+            $(comments_div).html("");
+        }
     }
 </script>

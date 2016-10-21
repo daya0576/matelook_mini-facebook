@@ -21,7 +21,8 @@ app.config.update(dict(
     USERNAME='admin',
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
-    DEBUG=True
+    DEBUG=True,
+    SITE_NAME='Fakebook'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -123,17 +124,6 @@ def index():
                                'WHERE post_id=? ', [post["post_id"]], one=True)
             post["comment"] = comment
 
-            # for comment in comments:
-            #     comment["message"] = handle_message(comment["message"])
-            #
-            #     replies = query_db('SELECT * FROM REPLY r JOIN USER u ON r.zid=u.zid '
-            #                        'WHERE comment_id=? ORDER BY time', [comment["id"]])
-            #     replies = [dict(row) for row in replies]
-            #     comment["replies"] = replies
-            #
-            #     for reply in replies:
-            #         reply["message"] = handle_message(reply["message"])
-
         return render_template('index.html', posts=posts)
     else:
         return render_template('index.html')
@@ -142,7 +132,6 @@ def index():
 @app.route('/get_comments')
 def get_post_comments():
     post_id = request.args.get('post_id')
-    print(post_id)
     m = re.match(r"^post_(\d+)$", post_id)
     if len(m.groups()) == 1:
         post_id = m.group(1)
@@ -175,13 +164,24 @@ def user_profile(user_zid):
 
     user_posts = get_user_posts(user_zid)
 
+    ''' combine mate and user post, get top 10 by time '''
+    posts = user_posts
+    posts = [dict(row) for row in posts]
+    posts = sorted(posts, key=lambda x: x['time'], reverse=True)
+    for post in posts:
+        post["message"] = handle_message(post["message"])
+
+        comment = query_db('SELECT count(id) as count FROM COMMENT '
+                           'WHERE post_id=? ', [post["post_id"]], one=True)
+        post["comment"] = comment
+
     user_mates = query_db('SELECT * FROM MATES m '
                           'LEFT JOIN USER u ON m.mate_zid = u.zid '
                           'WHERE m.user_zid = ?', [user_zid])
 
     return render_template('test_users.html',
                            user_info=user_info,
-                           user_posts=user_posts,
+                           posts=posts,
                            user_mates=user_mates)
 
 
