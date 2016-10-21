@@ -1,0 +1,41 @@
+.post_form{
+    text-align: right;
+
+}
+
+.post_form button{
+    font-size: 14px;
+    line-height: 22px;
+    padding: 0 16px;
+    margin: 10px 0;
+
+    vertical-align: baseline;
+}
+
+.add_comment {
+    height: 32px;
+    margin-bottom: 10px;
+    padding: 0px 12px;
+}
+
+.add_comment form .left {
+    display: block;
+    position:relative;
+    float:left;
+    margin-right:-32px;
+    width: 32px;
+}
+
+.add_comment form .right {
+    float:right;
+    width:100%;
+}
+
+.add_comment form .right .rightc {
+    margin-left:40px;
+    height: 32px;
+}
+
+.add_comment form .right .rightc input {
+    width: 100%;
+}

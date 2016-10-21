@@ -48,7 +48,26 @@
             {% else %}
                 <div style="height: 10px"></div>
             {% endif %}
+
+
         {% endfor %}
     </div>
-
+{% else %}
+    <div style="height: 10px"></div>
 {% endif %}
+
+<div class="add_comment">
+    <div class="comment">
+        <form action="{{ url_for('new_comment') }}" method="post">
+            <div class="left" style="float: left">{% include 'common/user_image.html' %}</div>
+            <div class="right">
+                <div class="rightc">
+                    <input class="form-control form-control-sm" type="text" name="message" placeholder="Write a comment...">
+                </div>
+            </div>
+
+            <input type="hidden" name="post_id" value="{{ post_id }}">
+        </form>
+    </div>
+</div>
+

@@ -27,6 +27,7 @@ app.config.update(dict(
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
 
+# Database
 def connect_db():
     """Connects to the specific database."""
     rv = sqlite3.connect(app.config['DATABASE'])
@@ -50,6 +51,7 @@ def get_db():
     return g.sqlite_db
 
 
+# common functions
 def time_date2txt(cur_time=datetime.utcnow()):
     return cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
 
@@ -57,6 +59,7 @@ def time_date2txt(cur_time=datetime.utcnow()):
 def handle_message(text):
     text_result = text
 
+    text_result = re.sub(r'<', '&lt', text_result)
     text_result = re.sub(r'\\n', '<br>', text_result)
 
     zids = re.findall(r'z[0-9]{7}', text)
@@ -73,10 +76,23 @@ def handle_message(text):
     return text_result
 
 
+def get_post_comment_count(posts):
+    posts = [dict(row) for row in posts]
+    for post in posts:
+        post["message"] = handle_message(post["message"])
+
+        comment = query_db('SELECT count(id) as count FROM COMMENT '
+                           'WHERE post_id=? ', [post["post_id"]], one=True)
+        post["comment"] = comment
+
+    return posts
+
+
 def get_user_posts(user_zid):
     user_posts = query_db('SELECT p.id as post_id, time, message, full_name, u.zid as zid, profile_img '
                           'FROM POST p JOIN USER u ON u.zid=p.zid WHERE u.zid = ? ORDER BY time DESC',
                           [user_zid])
+    user_posts = get_post_comment_count(user_posts)
     return user_posts
 
 
@@ -85,6 +101,7 @@ def get_mate_posts(user_zid):
                           'FROM POST p JOIN MATES m ON p.zid = m.mate_zid JOIN USER u ON u.zid=p.zid '
                           'WHERE m.user_zid= ? ORDER BY time DESC',
                           [user_zid])
+    mate_posts = get_post_comment_count(mate_posts)
     return mate_posts
 
 
@@ -117,13 +134,6 @@ def index():
         posts = sorted(posts, key=lambda x: x['time'], reverse=True)
         posts = posts[:10]
 
-        for post in posts:
-            post["message"] = handle_message(post["message"])
-
-            comment = query_db('SELECT count(id) as count FROM COMMENT '
-                               'WHERE post_id=? ', [post["post_id"]], one=True)
-            post["comment"] = comment
-
         return render_template('index.html', posts=posts)
     else:
         return render_template('index.html')
@@ -136,8 +146,7 @@ def get_post_comments():
     if len(m.groups()) == 1:
         post_id = m.group(1)
     else:
-        print("wrong post id given???")
-        return ''
+        return 'wrong post id given..'
 
     comments = query_db('SELECT * FROM COMMENT c JOIN USER u ON c.zid=u.zid '
                         'WHERE post_id=? ORDER BY time', [post_id])
@@ -154,7 +163,7 @@ def get_post_comments():
         for reply in replies:
             reply["message"] = handle_message(reply["message"])
 
-    return render_template('common/comments.html', comments=comments)
+    return render_template('common/comments.html', comments=comments, post_id=post_id)
 
 
 @app.route('/user/<user_zid>')
@@ -162,19 +171,15 @@ def user_profile(user_zid):
     user_info = query_db('SELECT * FROM USER WHERE zid = ?',
                          [user_zid], one=True)
 
+    ''' get user basic info '''
     user_posts = get_user_posts(user_zid)
 
     ''' combine mate and user post, get top 10 by time '''
     posts = user_posts
     posts = [dict(row) for row in posts]
     posts = sorted(posts, key=lambda x: x['time'], reverse=True)
-    for post in posts:
-        post["message"] = handle_message(post["message"])
 
-        comment = query_db('SELECT count(id) as count FROM COMMENT '
-                           'WHERE post_id=? ', [post["post_id"]], one=True)
-        post["comment"] = comment
-
+    ''' user friends'''
     user_mates = query_db('SELECT * FROM MATES m '
                           'LEFT JOIN USER u ON m.mate_zid = u.zid '
                           'WHERE m.user_zid = ?', [user_zid])
@@ -248,6 +253,25 @@ def post():
         db = get_db()
         db.execute('INSERT INTO POST (zid, time, message) values (?, ?, ?)',
                    [user_zid, cur_time_txt, post_message])
+        db.commit()
+
+    return redirect(url_for('index'))
+
+
+@app.route('/new_comment', methods=['GET', 'POST'])
+def new_comment():
+    """Post new comment"""
+    if session['logged_in'] and request.method == 'POST'\
+            and request.form['message'] != '' and request.form['message'] is not None:
+
+        user_zid = session['logged_in']
+        message = request.form['message']
+        post_id = request.form['post_id']
+        cur_time_txt = time_date2txt()
+
+        db = get_db()
+        db.execute('INSERT INTO COMMENT (zid, post_id, time, message) values (?, ?, ?, ?)',
+                   [user_zid, post_id, cur_time_txt, message])
         db.commit()
 
     return redirect(url_for('index'))

@@ -1,0 +1,7 @@
+<a class="profile_a" href="{{ url_for('user_profile', user_zid=g.user.zid) }}">
+    {% if g.user.profile_img %}
+        <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ g.user.profile_img }}">
+    {% else %}
+        <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
+    {% endif %}
+</a>

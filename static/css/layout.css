@@ -81,11 +81,6 @@ body {
     padding: 12px 12px 0;
 }
 
-.comments img {
-    width: 32px;
-    height: 32px;
-}
-
 .comments .reply {
     padding: 8px 44px 10px 44px;
     margin-top: -3px;
@@ -107,11 +102,16 @@ body {
     margin-left: -8px;
 }
 
+.comment img {
+    width: 32px;
+    height: 32px;
+}
+
 .comment .message {
     padding-left: 40px;
 }
 
-.comments .message {
+.message {
     word-wrap: break-word;
 }
 
