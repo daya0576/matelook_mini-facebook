@@ -9,4 +9,4 @@ fi
 
 git add .;
 git commit -m "$1  ---- auto sync";
-git push gitlab master
+git push origin master
