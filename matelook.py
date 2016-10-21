@@ -53,8 +53,11 @@ def time_date2txt(cur_time=datetime.utcnow()):
     return cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
 
 
-def add_zid_link(text):
+def handle_message(text):
     text_result = text
+
+    text_result = re.sub(r'\\n', '<br>', text_result)
+
     zids = re.findall(r'z[0-9]{7}', text)
     for zid in zids:
         user = query_db('select * from user where zid = ?',
@@ -62,7 +65,6 @@ def add_zid_link(text):
         if user:
             zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
             text_result = re.sub(zid, zid_html, text_result)
-            text_result = re.sub(r'\\n', '<br>', text_result)
         else:
             pass
             # print("user {} does not exist??".format(zid))
@@ -115,24 +117,55 @@ def index():
         posts = posts[:10]
 
         for post in posts:
-            comments = query_db('SELECT * FROM COMMENT c JOIN USER u ON c.zid=u.zid '
-                                'WHERE post_id=? ORDER BY time', [post["post_id"]])
-            comments = [dict(row) for row in comments]
-            post["comments"] = comments
+            post["message"] = handle_message(post["message"])
 
-            for comment in comments:
-                comment["message"] = add_zid_link(comment["message"])
-                replies = query_db('SELECT * FROM REPLY r JOIN USER u ON r.zid=u.zid '
-                                   'WHERE comment_id=? ORDER BY time', [comment["id"]])
-                replies = [dict(row) for row in replies]
-                comment["replies"] = replies
+            comment = query_db('SELECT count(id) as count FROM COMMENT '
+                               'WHERE post_id=? ', [post["post_id"]], one=True)
+            post["comment"] = comment
 
-                for reply in replies:
-                    reply["message"] = add_zid_link(reply["message"])
+            # for comment in comments:
+            #     comment["message"] = handle_message(comment["message"])
+            #
+            #     replies = query_db('SELECT * FROM REPLY r JOIN USER u ON r.zid=u.zid '
+            #                        'WHERE comment_id=? ORDER BY time', [comment["id"]])
+            #     replies = [dict(row) for row in replies]
+            #     comment["replies"] = replies
+            #
+            #     for reply in replies:
+            #         reply["message"] = handle_message(reply["message"])
 
         return render_template('index.html', posts=posts)
     else:
         return render_template('index.html')
+
+
+@app.route('/get_comments')
+def get_post_comments():
+    post_id = request.args.get('post_id')
+    print(post_id)
+    m = re.match(r"^post_(\d+)$", post_id)
+    if len(m.groups()) == 1:
+        post_id = m.group(1)
+    else:
+        print("wrong post id given???")
+        return ''
+
+    comments = query_db('SELECT * FROM COMMENT c JOIN USER u ON c.zid=u.zid '
+                        'WHERE post_id=? ORDER BY time', [post_id])
+    comments = [dict(row) for row in comments]
+
+    for comment in comments:
+        comment["message"] = handle_message(comment["message"])
+
+        replies = query_db('SELECT * FROM REPLY r JOIN USER u ON r.zid=u.zid '
+                           'WHERE comment_id=? ORDER BY time', [comment["id"]])
+        replies = [dict(row) for row in replies]
+        comment["replies"] = replies
+
+        for reply in replies:
+            reply["message"] = handle_message(reply["message"])
+
+    return render_template('common/comments.html', comments=comments)
 
 
 @app.route('/user/<user_zid>')

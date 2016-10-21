@@ -12,67 +12,31 @@
 
             <p class="post_message">{{ post.message|safe }}</p>
 
-            {% if post.comments|length > 0 %}
-                <a onclick="show_comments(this)" class="comments_sum">{{ post.comments|length }} comments</a>
+            {% if post.comment.count > 0 %}
+                <a onclick="show_comments(this)" id="post_{{ post.post_id }}" class="comments_sum">
+                    {{ post.comment.count }} comments
+                </a>
             {% endif %}
         </div>
     </div>
 
-    <div class="box_bottom">
-        {% if post.comments %}
-            <div class="comments">
-                {% for comment in post.comments %}
-                    <div class="comment">
-                        <a class="profile_a" href="{{ url_for('user_profile', user_zid=comment.zid) }}">
-                            {% if comment.profile_img %}
-                                <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ comment.profile_img }}">
-                            {% else %}
-                                <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
-                            {% endif %}
-                        </a>
-
-                        <div class="message">
-                            <a href="{{ url_for('user_profile', user_zid=comment.zid) }}">
-                                <strong>{{ comment.full_name }}</strong>
-                            </a>
-                            <span>{{ comment.message|safe }}</span><br>
-
-                            <a href="#">reply</a><span> · </span>
-                            <span class="post_time">{{ comment.time }}</span>
-                        </div>
-
-                    </div>
-
-                    {% if comment.replies %}
-                        <div class="reply">
-                            {% for reply in comment.replies %}
-                                <div>
-                                    <a class="profile_a" href="{{ url_for('user_profile', user_zid=reply.zid) }}">
-                                        {% if reply.profile_img %}
-                                            <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ reply.profile_img }}">
-                                        {% else %}
-                                            <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
-                                        {% endif %}
-                                    </a>
-                                    <div class="message">
-                                        <a href="{{ url_for('user_profile', user_zid=reply.zid) }}">
-                                            <strong>{{ reply.full_name }}</strong>
-                                        </a>
-                                        <span>{{ reply.message|safe }}</span><br>
-
-                                        <a href="#">reply</a><span> · </span>
-                                        <span class="post_time">{{ reply.time }}</span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div style="height: 10px"></div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-        {% endif %}
-
-    </div>
+    <div id="post_{{ post.post_id }}_comments" class="box_bottom"></div>
 {% endfor %}
+
+
+
+<script>
+    function show_comments(obj) {
+        var post_id;
+        post_id = $(obj).attr('id');
+        var comments_div = "#"+post_id+"_comments";
+
+        var comments_count = $(obj).text()
+        $(obj).text("loading..");
+
+        $.get("{{ url_for('get_post_comments') }}", {post_id: post_id}, function(data){
+            $(comments_div).html(data);
+            $(obj).text(comments_count);
+        });
+    }
+</script>
