@@ -111,8 +111,11 @@ def get_mate_posts(user_zid):
 
 def get_refresh_comments(post_id):
     comments = get_post_comments_sub(post_id)
-    comments_sum = ' comments' if len(comments) > 1 else ' comment'
-    comments_sum = str(len(comments)) + comments_sum
+    if len(comments) == 0:
+        comments_sum = 'add comment'
+    else:
+        comments_sum = ' comments' if len(comments) > 1 else ' comment'
+        comments_sum = str(len(comments)) + comments_sum
 
     comments_html = render_template('common/comments.html', comments=comments, post_id=post_id)
 

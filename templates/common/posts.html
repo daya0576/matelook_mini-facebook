@@ -17,6 +17,8 @@
                 <a onclick="show_comments(this)" id="post_{{ post.post_id }}">
                     {% if post.comment.count > 1 %}
                         {{ post.comment.count }} comments
+                    {% elif post.comment.count == 0 %}
+                        add comment
                     {% else %}
                         {{ post.comment.count }} comment
                     {% endif %}
