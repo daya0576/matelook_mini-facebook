@@ -48,6 +48,11 @@
                                 </a>
                                 <span>{{ reply.message|safe }}</span><br>
 
+                                {% if reply.zid == g.user.zid %}
+                                    <a style="cursor: pointer" onclick="delete_reply(this)" data-reply_id="{{ reply.id }}">delete</a>
+                                    <span> · </span>
+                                {% endif %}
+
                                 <span class="post_time">{{ reply.time }}</span>
 
                                 <!--{% if loop.index < comment.replies|length - 1 %}-->

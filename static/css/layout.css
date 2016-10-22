@@ -117,17 +117,20 @@ body {
     word-wrap: break-word;
 }
 
-.comments_sum, .comments_sum:hover {
-    font-size: 14px;
-    color: #898f9c;
-    cursor: pointer;
-    padding: 3px 3px 5px 0px;
-
+.comments_sum {
+    padding: 5px 0;
     border-top: 1px solid #e5e5e5;
     display: block;
     text-align: right;
 }
 
-.comments_sum {
+.comments_sum a:hover, .comments_sum a {
+    font-size: 14px;
+    color: #898f9c;
+    cursor: pointer;
+    padding: 3px 3px 5px 0px;
+}
+
+.comments_sum a{
     text-decoration: none;
 }

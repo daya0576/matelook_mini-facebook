@@ -1,16 +1,56 @@
 <div id="add_comment_{{ comment.id }}" class="add_reply_container">
     <div class="add_reply">
-        <form action="{{ url_for('new_reply') }}" method="post">
-            <div class="left">{% include 'common/user_image.html' %}</div>
-            <div class="right">
-                <div class="rightc">
-                    <input class="form-control form-control-sm" type="text" name="message" placeholder="Write a reply...">
-                </div>
+        <div class="left">{% include 'common/user_image.html' %}</div>
+        <div class="right">
+            <div class="rightc">
+                <input class="form-control form-control-sm" type="text" data-comment_id="{{ comment.id }}" name="add_reply" placeholder="Write a reply...">
             </div>
-
-            <input type="hidden" name="comment_id" value="{{ comment.id }}">
-        </form>
+        </div>
     </div>
 </div>
 
 
+<script type="text/javascript">
+    function refresh_comments(data) {
+        var comments_div = "#post_" + data.post_id + "_comments";
+        $(comments_div).html(data.comments_html);
+
+        $('#post_'+data.post_id).text(data.comments_sum)
+    }
+
+    $(function() {
+      var submit_form = function(e, comment_id, reply) {
+          if (reply == ''){
+              alert('Reply cannot be empty.');
+          } else {
+              $.getJSON("{{ url_for('new_reply') }}", {
+                  reply: reply,
+                  comment_id: comment_id
+              }, function(data) {
+                  refresh_comments(data);
+              });
+              return false;
+          }
+      };
+
+      $('input[name="add_reply"]').bind('keydown', function(e) {
+          if (e.keyCode == 13) {
+              var reply = $(this).val();
+              var comment_id = $(this).attr("data-comment_id");
+
+              submit_form(e, comment_id, reply);
+          }
+      });
+
+    });
+
+    function delete_reply(obj){
+        var reply_id = $(obj).attr("data-reply_id");
+        var r = confirm("Are u sure to delete this reply? ");
+        if (r == true) {
+            $.getJSON("{{ url_for('delete_reply') }}", {reply_id: reply_id}, function(data){
+                refresh_comments(data);
+            });
+        }
+    }
+</script>

@@ -59,8 +59,8 @@ def time_date2txt(cur_time=datetime.utcnow()):
 def handle_message(text):
     text_result = text
 
-    if text == 'null':
-        return ''
+    if text == 'null' or text is None:
+        return '.'
 
     text_result = re.sub(r'<', '&lt', text_result)
     text_result = re.sub(r'\\n', '<br>', text_result)
@@ -298,7 +298,7 @@ def new_comment():
 
 @app.route('/delete_comment')
 def delete_comment():
-    """Post new comment"""
+    """ Delete a comment"""
     if session['logged_in']:
         user_zid = session['logged_in']
         comment_id = request.args.get('comment_id')
@@ -316,20 +316,55 @@ def delete_comment():
 
 @app.route('/new_post', methods=['GET', 'POST'])
 def new_reply():
-    """Post new comment"""
-    if session['logged_in'] and request.method == 'POST' \
-            and request.form['message'] != '' and request.form['message'] is not None:
+    """Post new reply"""
+    if session['logged_in']:
         user_zid = session['logged_in']
-        message = request.form['message']
-        comment_id = request.form['comment_id']
+        reply = request.args.get('reply')
+        comment_id = request.args.get('comment_id')
         cur_time_txt = time_date2txt()
+
+        post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+        post_id = post["post_id"]
 
         db = get_db()
         db.execute('INSERT INTO REPLY (zid, comment_id, time, message) values (?, ?, ?, ?)',
-                   [user_zid, comment_id, cur_time_txt, message])
+                   [user_zid, comment_id, cur_time_txt, reply])
         db.commit()
 
-    return redirect(url_for('index'))
+        return get_refresh_comments(post_id)
+
+
+@app.route('/delete_reply')
+def delete_reply():
+    """ Delete a reply"""
+    if session['logged_in']:
+        reply_id = request.args.get('reply_id')
+
+        reply = query_db('SELECT * FROM REPLY WHERE id=?', [reply_id], one=True)
+        comment_id = reply['comment_id']
+
+        comment = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+        post_id = comment["post_id"]
+
+        db = get_db()
+        db.execute('''DELETE FROM REPLY WHERE id = ? ''', [reply_id])
+        db.commit()
+
+        return get_refresh_comments(post_id)
+
+
+@app.route('/delete_post')
+def delete_post():
+    """ Delete a post"""
+    if session['logged_in']:
+        post_id = request.args.get('post_id')
+        print("post_id: ", post_id)
+
+        db = get_db()
+        result = db.execute('''DELETE FROM POST WHERE id = ? ''', [post_id])
+        db.commit()
+
+        return jsonify(return_code=0)
 
 
 if __name__ == '__main__':
