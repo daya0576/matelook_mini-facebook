@@ -16,7 +16,8 @@
                     </a>
                     <span>{{ comment.message|safe }}</span><br>
 
-                    <a href="#">reply</a><span> · </span>
+                    <a style="cursor: pointer" onclick="show_add_reply(this)" data-comment_id="{{ comment.id }}">reply</a>
+                    <span> · </span>
                     <span class="post_time">{{ comment.time }}</span>
                 </div>
 
@@ -33,22 +34,31 @@
                                     <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
                                 {% endif %}
                             </a>
+                            {% if loop.index < comment.replies|length - 1 %}
                             <div class="message">
+                            {% else %}
+                            <div style="padding-bottom: 0px" class="message">
+                            {% endif %}
                                 <a href="{{ url_for('user_profile', user_zid=reply.zid) }}">
                                     <strong>{{ reply.full_name }}</strong>
                                 </a>
                                 <span>{{ reply.message|safe }}</span><br>
 
-                                <a href="#">reply</a><span> · </span>
                                 <span class="post_time">{{ reply.time }}</span>
+
+                                <!--{% if loop.index < comment.replies|length - 1 %}-->
+                                    <!--<div style="height: 5px"></div>-->
+                                <!--{% endif %}-->
                             </div>
                         </div>
                     {% endfor %}
                 </div>
+
+                {% include 'common/new_reply.html' %}
             {% else %}
+                {% include 'common/new_reply.html' %}
                 <div style="height: 10px"></div>
             {% endif %}
-
 
         {% endfor %}
     </div>
@@ -71,3 +81,16 @@
     </div>
 </div>
 
+<script>
+    function show_add_reply(obj) {
+        var post_id;
+        post_id = $(obj).attr('data-comment_id');
+        var add_reply_div = "#add_comment_"+post_id;
+
+        $(add_reply_div).show();
+        $(add_reply_div).find("input").get(0).focus()
+
+    }
+
+
+</script>

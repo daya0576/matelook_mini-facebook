@@ -7,10 +7,14 @@
         <h3>Users:</h3>
         {% for user in search_users %}
             {% if user.full_name %}
-                <a class="profile_a" href="{{ url_for('user_profile', user_zid=mate.zid) }}">
-                    <img class="profile_img" src="/static/{{ config['PROFILE_IMG_DIR'] }}/{{ mate.profile_img }}">
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=user.zid) }}">
+                    {% if user.profile_img %}
+                        <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user.profile_img }}">
+                    {% else %}
+                        <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
+                    {% endif %}
                 </a>
-                <a href="{{ url_for('user_profile', user_zid=mate.zid) }}">{{ mate.full_name }}</a>
+                <a href="{{ url_for('user_profile', user_zid=user.zid) }}">{{ user.full_name }}</a>
                 <br>
             {% endif %}
         {% endfor %}

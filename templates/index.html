@@ -3,7 +3,6 @@
 
 {% block body %}
     <script src="{{ url_for('static', filename='js/posts.js') }}"></script>
-    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/index.css') }}">
 
     {% if session['logged_in'] %}
         {% include 'common/new_post.html' %}
@@ -11,7 +10,7 @@
         {% if posts %}
             {% include 'common/posts.html' %}
         {% else %}
-            Nothing new with your friends.
+            Unbelievable.  No posts here so far
         {% endif %}
 
     {% endif %}

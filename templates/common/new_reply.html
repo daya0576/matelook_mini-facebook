@@ -1,0 +1,14 @@
+<div id="add_comment_{{ comment.id }}" class="add_reply_container">
+    <div class="add_reply">
+        <form action="{{ url_for('new_reply') }}" method="post">
+            <div class="left">{% include 'common/user_image.html' %}</div>
+            <div class="right">
+                <div class="rightc">
+                    <input class="form-control form-control-sm" type="text" name="message" placeholder="Write a reply...">
+                </div>
+            </div>
+
+            <input type="hidden" name="comment_id" value="{{ comment.id }}">
+        </form>
+    </div>
+</div>

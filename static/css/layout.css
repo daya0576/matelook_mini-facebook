@@ -6,10 +6,12 @@
     margin-top: 9px;
 }
 
-.profile_a {
+.nav .profile_a {
     font-size: 0px;
     padding-bottom: 0 !important;
     padding-top: 0 !important;
+
+    margin-right: -15px;
 }
 
 
@@ -82,7 +84,7 @@ body {
 }
 
 .comments .reply {
-    padding: 8px 44px 10px 44px;
+    padding: 8px 44px 0px 44px;
     margin-top: -3px;
 }
 
@@ -90,11 +92,11 @@ body {
 .comments .reply img {
     width: 24px;
     height: 24px;
-    margin-top: 6px;
+    /*margin-top: 6px;*/
 }
 
 .comments .reply .message {
-    padding-top: 6px;
+    /*padding-top: 6px;*/
     padding-left: 32px;
     padding-bottom: 6px;
 

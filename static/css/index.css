@@ -19,8 +19,6 @@
 }
 
 .add_comment form .left {
-    display: block;
-    position:relative;
     float:left;
     margin-right:-32px;
     width: 32px;
@@ -28,14 +26,57 @@
 
 .add_comment form .right {
     float:right;
-    width:100%;
+    width: 100%;
 }
 
 .add_comment form .right .rightc {
     margin-left:40px;
-    height: 32px;
 }
 
 .add_comment form .right .rightc input {
     width: 100%;
+}
+
+
+
+
+.add_reply .profile_post_img{
+    width: 24px;
+    height: 24px;
+    margin-top: 6px;
+}
+
+.add_reply_container {
+    display: none;
+    padding: 0px 44px 10px 44px;
+}
+
+.add_reply {
+    /*display: none;*/
+    height: 30px;
+    padding-left: 8px;
+    border-left: 2px solid #dddfe2;
+    margin-left: -8px;
+}
+
+.add_reply form .left {
+    float:left;
+    margin-right:-24px;
+    width: 24px;
+}
+
+.add_reply form .right {
+    float:right;
+    width: 100%;
+    margin-top: 6px;
+}
+
+.add_reply form .right .rightc {
+    margin-left:28px;
+}
+
+.add_reply form .right .rightc input {
+    height: 24px;
+    width: 100%;
+    padding: 6px 6px;
 }

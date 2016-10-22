@@ -59,6 +59,9 @@ def time_date2txt(cur_time=datetime.utcnow()):
 def handle_message(text):
     text_result = text
 
+    if text == 'null':
+        return ''
+
     text_result = re.sub(r'<', '&lt', text_result)
     text_result = re.sub(r'\\n', '<br>', text_result)
 
@@ -89,8 +92,9 @@ def get_post_comment_count(posts):
 
 
 def get_user_posts(user_zid):
-    user_posts = query_db('SELECT p.id as post_id, time, message, full_name, u.zid as zid, profile_img '
-                          'FROM POST p JOIN USER u ON u.zid=p.zid WHERE u.zid = ? ORDER BY time DESC',
+    user_posts = query_db('''SELECT p.id as post_id, time, message, full_name, u.zid as zid, profile_img
+                             FROM POST p JOIN USER u ON u.zid=p.zid
+                             WHERE u.zid = ? ORDER BY time DESC''',
                           [user_zid])
     user_posts = get_post_comment_count(user_posts)
     return user_posts
@@ -180,9 +184,10 @@ def user_profile(user_zid):
     posts = sorted(posts, key=lambda x: x['time'], reverse=True)
 
     ''' user friends'''
-    user_mates = query_db('SELECT * FROM MATES m '
-                          'LEFT JOIN USER u ON m.mate_zid = u.zid '
-                          'WHERE m.user_zid = ?', [user_zid])
+    user_mates = query_db('''
+        SELECT * FROM MATES m
+        LEFT JOIN USER u ON m.mate_zid = u.zid
+        WHERE m.user_zid = ?''', [user_zid])
 
     return render_template('test_users.html',
                            user_info=user_info,
@@ -272,6 +277,24 @@ def new_comment():
         db = get_db()
         db.execute('INSERT INTO COMMENT (zid, post_id, time, message) values (?, ?, ?, ?)',
                    [user_zid, post_id, cur_time_txt, message])
+        db.commit()
+
+    return redirect(url_for('index'))
+
+
+@app.route('/new_post', methods=['GET', 'POST'])
+def new_reply():
+    """Post new comment"""
+    if session['logged_in'] and request.method == 'POST' \
+            and request.form['message'] != '' and request.form['message'] is not None:
+        user_zid = session['logged_in']
+        message = request.form['message']
+        comment_id = request.form['comment_id']
+        cur_time_txt = time_date2txt()
+
+        db = get_db()
+        db.execute('INSERT INTO REPLY (zid, comment_id, time, message) values (?, ?, ?, ?)',
+                   [user_zid, comment_id, cur_time_txt, message])
         db.commit()
 
     return redirect(url_for('index'))
