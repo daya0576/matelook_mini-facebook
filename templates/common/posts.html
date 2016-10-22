@@ -42,6 +42,7 @@
             $.get("{{ url_for('get_post_comments') }}", {post_id: post_id}, function(data){
                 $(comments_div).html(data);
                 $(obj).text(comments_count);
+                $(comments_div).find('input[name="add_comment"]').focus();
             });
         }else{
             $(comments_div).html("");

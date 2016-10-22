@@ -18,6 +18,10 @@
 
                     <a style="cursor: pointer" onclick="show_add_reply(this)" data-comment_id="{{ comment.id }}">reply</a>
                     <span> · </span>
+                    {% if comment.zid == g.user.zid %}
+                        <a style="cursor: pointer" onclick="delete_comment(this)" data-comment_id="{{ comment.id }}">delete</a>
+                        <span> · </span>
+                    {% endif %}
                     <span class="post_time">{{ comment.time }}</span>
                 </div>
 
@@ -54,10 +58,10 @@
                     {% endfor %}
                 </div>
 
-                {% include 'common/new_reply.html' %}
+                <div style="padding-bottom: 10px">{% include 'common/new_reply.html' %}</div>
             {% else %}
-                {% include 'common/new_reply.html' %}
-                <div style="height: 10px"></div>
+                <div style="padding-bottom: 10px">{% include 'common/new_reply.html' %}</div>
+                <!--<div style="height: 10px"></div>-->
             {% endif %}
 
         {% endfor %}
@@ -68,20 +72,20 @@
 
 <div class="add_comment">
     <div class="comment">
-        <form action="{{ url_for('new_comment') }}" method="post">
+        <!--<form action="{{ url_for('new_comment') }}" method="post">-->
             <div class="left" style="float: left">{% include 'common/user_image.html' %}</div>
             <div class="right">
                 <div class="rightc">
-                    <input class="form-control form-control-sm" type="text" name="message" placeholder="Write a comment...">
+                    <input class="form-control" type="text" name="add_comment" data-post_id="{{ post_id }}" placeholder="Write a comment...">
                 </div>
             </div>
 
             <input type="hidden" name="post_id" value="{{ post_id }}">
-        </form>
+        <!--</form>-->
     </div>
 </div>
 
-<script>
+<script type="text/javascript">
     function show_add_reply(obj) {
         var post_id;
         post_id = $(obj).attr('data-comment_id');
@@ -92,5 +96,46 @@
 
     }
 
+    function refresh_comments(data) {
+        var comments_div = "#post_" + data.post_id + "_comments";
+        $(comments_div).html(data.comments_html);
 
+        $('#post_'+data.post_id).text(data.comments_sum)
+    }
+
+    $(function() {
+      var submit_form = function(e, post_id, comment) {
+          if (comment == ''){
+              alert('Comment cannot be empty.');
+          } else {
+              $.getJSON("{{ url_for('new_comment') }}", {
+                  comment: comment,
+                  post_id: post_id
+              }, function(data) {
+                  refresh_comments(data);
+              });
+              return false;
+          }
+      };
+
+      $('input[name="add_comment"]').bind('keydown', function(e) {
+          if (e.keyCode == 13) {
+              var comment = $(this).val();
+              var post_id = $(this).attr("data-post_id");
+
+              submit_form(e, post_id, comment);
+          }
+      });
+
+    });
+
+    function delete_comment(obj){
+        var comment_id = $(obj).attr("data-comment_id");
+        var r = confirm("Are u sure to delete this comment? ");
+        if (r == true) {
+            $.getJSON("{{ url_for('delete_comment') }}", {comment_id: comment_id}, function(data){
+                refresh_comments(data);
+            });
+        }
+    }
 </script>

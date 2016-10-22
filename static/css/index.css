@@ -1,9 +1,9 @@
-.post_form{
+.post_{
     text-align: right;
 
 }
 
-.post_form button{
+.post_ button{
     font-size: 14px;
     line-height: 22px;
     padding: 0 16px;
@@ -12,31 +12,32 @@
     vertical-align: baseline;
 }
 
+
+
 .add_comment {
     height: 32px;
     margin-bottom: 10px;
     padding: 0px 12px;
 }
 
-.add_comment form .left {
+.add_comment .left {
     float:left;
     margin-right:-32px;
     width: 32px;
 }
 
-.add_comment form .right {
+.add_comment .right {
     float:right;
     width: 100%;
 }
 
-.add_comment form .right .rightc {
+.add_comment .right .rightc {
     margin-left:40px;
 }
 
-.add_comment form .right .rightc input {
+.add_comment .right .rightc input {
     width: 100%;
 }
-
 
 
 
@@ -48,7 +49,7 @@
 
 .add_reply_container {
     display: none;
-    padding: 0px 44px 10px 44px;
+    padding: 0px 44px 0px 44px;
 }
 
 .add_reply {
@@ -59,23 +60,23 @@
     margin-left: -8px;
 }
 
-.add_reply form .left {
+.add_reply .left {
     float:left;
     margin-right:-24px;
     width: 24px;
 }
 
-.add_reply form .right {
+.add_reply .right {
     float:right;
     width: 100%;
     margin-top: 6px;
 }
 
-.add_reply form .right .rightc {
+.add_reply .right .rightc {
     margin-left:28px;
 }
 
-.add_reply form .right .rightc input {
+.add_reply .right .rightc input {
     height: 24px;
     width: 100%;
     padding: 6px 6px;

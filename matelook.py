@@ -6,7 +6,7 @@ import os, re
 from datetime import datetime
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-     render_template, flash
+     render_template, flash, jsonify
 
 # create our little application :)
 app = Flask(__name__)
@@ -109,6 +109,16 @@ def get_mate_posts(user_zid):
     return mate_posts
 
 
+def get_refresh_comments(post_id):
+    comments = get_post_comments_sub(post_id)
+    comments_sum = ' comments' if len(comments) > 1 else ' comment'
+    comments_sum = str(len(comments)) + comments_sum
+
+    comments_html = render_template('common/comments.html', comments=comments, post_id=post_id)
+
+    return jsonify(post_id=post_id, comments_html=comments_html, comments_sum=comments_sum)
+
+
 @app.before_request
 def before_request():
     g.user = None
@@ -143,15 +153,7 @@ def index():
         return render_template('index.html')
 
 
-@app.route('/get_comments')
-def get_post_comments():
-    post_id = request.args.get('post_id')
-    m = re.match(r"^post_(\d+)$", post_id)
-    if len(m.groups()) == 1:
-        post_id = m.group(1)
-    else:
-        return 'wrong post id given..'
-
+def get_post_comments_sub(post_id):
     comments = query_db('SELECT * FROM COMMENT c JOIN USER u ON c.zid=u.zid '
                         'WHERE post_id=? ORDER BY time', [post_id])
     comments = [dict(row) for row in comments]
@@ -166,6 +168,20 @@ def get_post_comments():
 
         for reply in replies:
             reply["message"] = handle_message(reply["message"])
+
+    return comments
+
+
+@app.route('/get_comments')
+def get_post_comments():
+    post_id = request.args.get('post_id')
+    m = re.match(r"^post_(\d+)$", post_id)
+    if len(m.groups()) == 1:
+        post_id = m.group(1)
+    else:
+        return 'wrong post id given..'
+
+    comments = get_post_comments_sub(post_id)
 
     return render_template('common/comments.html', comments=comments, post_id=post_id)
 
@@ -263,23 +279,39 @@ def post():
     return redirect(url_for('index'))
 
 
-@app.route('/new_comment', methods=['GET', 'POST'])
+@app.route('/new_comment')
 def new_comment():
     """Post new comment"""
-    if session['logged_in'] and request.method == 'POST'\
-            and request.form['message'] != '' and request.form['message'] is not None:
-
+    if session['logged_in']:
         user_zid = session['logged_in']
-        message = request.form['message']
-        post_id = request.form['post_id']
+        comment = request.args.get('comment')
+        post_id = request.args.get('post_id')
         cur_time_txt = time_date2txt()
 
         db = get_db()
         db.execute('INSERT INTO COMMENT (zid, post_id, time, message) values (?, ?, ?, ?)',
-                   [user_zid, post_id, cur_time_txt, message])
+                   [user_zid, post_id, cur_time_txt, comment])
         db.commit()
 
-    return redirect(url_for('index'))
+        return get_refresh_comments(post_id)
+
+
+@app.route('/delete_comment')
+def delete_comment():
+    """Post new comment"""
+    if session['logged_in']:
+        user_zid = session['logged_in']
+        comment_id = request.args.get('comment_id')
+
+        post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+        post_id = post["post_id"]
+
+        db = get_db()
+        db.execute('''DELETE FROM REPLY WHERE comment_id = ? ''', [comment_id])
+        db.execute('''DELETE FROM COMMENT WHERE id=?''', [comment_id])
+        db.commit()
+
+        return get_refresh_comments(post_id)
 
 
 @app.route('/new_post', methods=['GET', 'POST'])
@@ -298,6 +330,7 @@ def new_reply():
         db.commit()
 
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run()
