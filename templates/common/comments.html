@@ -143,4 +143,40 @@
             });
         }
     }
+
+    $(function() {
+      var submit_form = function(e, comment_id, reply) {
+          if (reply == ''){
+              alert('Reply cannot be empty.');
+          } else {
+              $.getJSON("{{ url_for('new_reply') }}", {
+                  reply: reply,
+                  comment_id: comment_id
+              }, function(data) {
+                  refresh_comments(data);
+              });
+              return false;
+          }
+      };
+
+      $('input[name="add_reply"]').bind('keydown', function(e) {
+          if (e.keyCode == 13) {
+              var reply = $(this).val();
+              var comment_id = $(this).attr("data-comment_id");
+
+              submit_form(e, comment_id, reply);
+          }
+      });
+
+    });
+
+    function delete_reply(obj){
+        var reply_id = $(obj).attr("data-reply_id");
+        var r = confirm("Are u sure to delete this reply? ");
+        if (r == true) {
+            $.getJSON("{{ url_for('delete_reply') }}", {reply_id: reply_id}, function(data){
+                refresh_comments(data);
+            });
+        }
+    }
 </script>
