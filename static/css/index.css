@@ -81,3 +81,15 @@
     width: 100%;
     padding: 6px 6px;
 }
+
+
+.form-signin {
+    max-width: 330px;
+    padding: 15px;
+    margin: 40px auto;
+}
+
+.form-signin .form-control {
+    padding: 10px;
+    height: 44px;
+}

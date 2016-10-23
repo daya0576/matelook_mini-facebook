@@ -38,7 +38,7 @@
                                     <img width="20px" class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
                                 {% endif %}
                             </a>
-                            {% if loop.index < comment.replies|length - 1 %}
+                            {% if loop.index < comment.replies|length %}
                             <div class="message">
                             {% else %}
                             <div style="padding-bottom: 0px" class="message">

@@ -20,7 +20,7 @@
             <li><a href="{{ url_for('logout') }}">Log out</a></li>
         {% else %}
             <li><a href="{{ url_for('login') }}">Login</a></li>
-            {#<a href="{{ url_for('sign_up') }}"></a>#}
+            <li><a href="{{ url_for('sign_up') }}">Sign up</a></li>
         {% endif %}
       </ul>
       <form action="{{ url_for('search') }}" class="navbar-form navbar-right">

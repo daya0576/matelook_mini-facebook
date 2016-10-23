@@ -153,7 +153,7 @@ def index():
 
         return render_template('index.html', posts=posts)
     else:
-        return render_template('index.html')
+        return redirect(url_for('login'))
 
 
 def get_post_comments_sub(post_id):
@@ -243,6 +243,14 @@ def login():
 @app.route('/logout')
 def logout():
     """Logs the user out."""
+    flash('You were logged out')
+    session.pop('logged_in', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/sign_up')
+def sign_up():
+    """ sign up"""
     flash('You were logged out')
     session.pop('logged_in', None)
     return redirect(url_for('index'))
