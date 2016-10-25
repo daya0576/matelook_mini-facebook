@@ -504,6 +504,7 @@ def remove_friend():
 @app.route('/accept_friend')
 def accept_friend():
     """ accept friend request """
+    error = ''
     if session['logged_in']:
         mate_zid = request.args.get('zid')
         user_zid = g.user['zid']
@@ -517,7 +518,7 @@ def accept_friend():
                 db.execute('UPDATE MATES SET confirmed=1 WHERE user_zid=? AND mate_zid=? AND confirmed=0',
                            [mate_zid, user_zid])
                 db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
-                           [user_zid, mate_zid, 0])
+                           [user_zid, mate_zid, 1])
                 db.commit()
             else:
                 error = 'request does not exit'
