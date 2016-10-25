@@ -4,38 +4,29 @@
 {% block body %}
     {% if user_info %}
         <h3>Profile:</h3>
-        <img src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
-             width="100px"
-             alt=""> <br>
-        {# Private information such as e-mail, password, lat, long and courses should not be displayed. #}
-        zid: {{ user_info.zid }}<br>
-        full_name: {{ user_info.full_name }}<br>
-        birthday: {{ user_info.birthday }}<br>
-        home_suburb: {{ user_info.home_suburb }}<br>
-        program: {{ user_info.program }}<br>
+        <div class="box_top" style="padding-bottom: 15px">
+            <img style="width: 100px; padding-bottom: 15px"
+                 src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
+                 alt=""> <br>
+            {# Private information such as e-mail, password, lat, long and courses should not be displayed. #}
+            <text>ZID: {{ user_info.zid }}<br></text>
+            <text>Fullname: {{ user_info.full_name }}<br></text>
+            <text>Birthday: {{ user_info.birthday }}<br></text>
+            <text>Home Suburb: {{ user_info.home_suburb }}<br></text>
+            <text>Program: {{ user_info.program }}<br></text>
+        </div>
+
+
+        <h3>Friends:</h3>
+        {% include 'common/friends.html' %}
+
 
         <h3>POSTS:</h3>
         {% if posts %}
             {% include 'common/posts.html' %}
         {% else %}
-            Nothing new with your friends.
+            <div class="box_top">Nothing new with your friends.</div>
         {% endif %}
-
-        <h3>Friends:</h3>
-        {% for user in user_mates %}
-            {% if user.full_name %}
-                <a target="_blank" class="profile_a" href="{{ url_for('user_profile', user_zid=user.mate_zid) }}">
-                    &nbsp;<img class="profile_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user.profile_img }}">
-                </a>
-                <a target="_blank" href="{{ url_for('user_profile', user_zid=user.mate_zid) }}">{{ user.full_name }}</a>
-                <br>
-            {% else %}
-                <a>{{ user.mate_zid }}(user dose not exist)</a>
-
-                <br>
-            {% endif %}
-        {% endfor %}
-
     {% else %}
         This user does not exit.
     {% endif %}

@@ -1,6 +1,6 @@
-<div class="box_top">
+<div id="new_post" class="box_top">
     <form class="post_form" action="{{ url_for('post') }}" method="post">
-        <textarea class="form-control" rows="3" name="message" placeholder="What's on your mind?"></textarea>
+        <textarea id="new_post_text" class="form-control" rows="3" name="message" placeholder="What's on your mind?"></textarea>
         <button type="submit" class="btn btn-primary"><strong>Post</strong></button>
     </form>
 </div>

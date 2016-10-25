@@ -127,8 +127,8 @@ if __name__ == "__main__":
 
     for user_dict in user_dicts:
         for mate in user_dict['mates']:
-            insert_mate_sql = "INSERT INTO MATES(user_zid, mate_zid) VALUES (?, ?)"
-            c.executemany(insert_mate_sql, [(user_dict['zid'], mate)])
+            insert_mate_sql = "INSERT INTO MATES(user_zid, mate_zid, confirmed) VALUES (?, ?, ?)"
+            c.executemany(insert_mate_sql, [(user_dict['zid'], mate, 1)])
         for course in user_dict['courses']:
             insert_course_sql = "INSERT INTO ENROLLMENT(zid, course) VALUES (?, ?)"
             c.executemany(insert_course_sql, [(user_dict['zid'], course)])

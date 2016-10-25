@@ -27,7 +27,7 @@ app.config.update(dict(
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
-    SITE_NAME='Fakebook'
+    SITE_NAME='Fadebook'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -127,9 +127,32 @@ def get_refresh_comments(post_id):
     return jsonify(post_id=post_id, comments_html=comments_html, comments_sum=comments_sum)
 
 
-def get_user(zid):
-    return query_db('SELECT * FROM USER WHERE zid = ?',
-                    [zid], one=True)
+def add_attr_confirm(mates):
+    if g.user:
+        user_zid = g.user['zid']
+        mates = [dict(row) for row in mates]
+        for mate in mates:
+            mate_sent = query_db('SELECT confirmed FROM MATES WHERE user_zid = ? AND mate_zid = ?',
+                                 [user_zid, mate['zid']], one=True)
+            mate_receive = query_db('SELECT confirmed FROM MATES WHERE user_zid = ? AND mate_zid = ?',
+                                    [mate['zid'], user_zid], one=True)
+
+            if mate_sent and mate_receive:
+                mate['relation'] = 'friend'
+            elif mate_receive and mate_receive['confirmed'] == 0:
+                mate['relation'] = 'receive'
+
+            elif mate_sent and mate_sent['confirmed'] == 0:
+                    mate['relation'] = 'sent'
+            else:
+                mate['relation'] = 'no_friend'
+            # print(mate['zid'], user_zid, mate_q['confirmed'])
+    return mates
+
+
+def get_user(zid=-1, email=''):
+    return query_db('SELECT * FROM USER WHERE zid = ? OR email = ?',
+                    [zid, email], one=True)
 
 
 def generate_confirmation_token(email):
@@ -222,11 +245,23 @@ def user_profile(user_zid):
         SELECT * FROM MATES m
         LEFT JOIN USER u ON m.mate_zid = u.zid
         WHERE m.user_zid = ?''', [user_zid])
+    user_mates = [dict(row) for row in user_mates]
+    user_mates = add_attr_confirm(user_mates)
+
+    # get all the requests to g.user
+    request_receive = query_db('''
+        SELECT * from (SELECT * FROM MATES WHERE mate_zid=? and confirmed=0) m
+        LEFT JOIN USER u on m.user_zid = u.zid''', [user_zid])
+    request_receive = [dict(row) for row in request_receive]
+    for user in request_receive:
+        user['relation'] = 'receive'
+
+    user_mates = request_receive + user_mates
 
     return render_template('test_users.html',
                            user_info=user_info,
                            posts=posts,
-                           user_mates=user_mates)
+                           users=user_mates)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -279,19 +314,24 @@ def sign_up():
             error = 'You have to enter a password'
         elif request.form['password'] != request.form['password_confirm']:
             error = 'The two passwords do not match'
-        elif get_user(request.form['zid']) is not None:
+        elif get_user(zid=request.form['zid']) is not None:
             error = 'The zid is already signed up.'
+        elif get_user(email=request.form['email']) is not None:
+            error = 'The email is already signed up.'
         else:
             db = get_db()
-            db.execute('''insert into user (zid, email, password, confirmed) values (?, ?, ?, ?)''',
+            db.execute('''insert into user (zid, email, password, full_name, profile_img, confirmed)
+                          values (?, ?, ?, ?, ?, ?)''',
                        [request.form['zid'], request.form['email'],
-                        request.form['password'], 0])
+                        request.form['password'], request.form['fullname'],
+                        'default.png', 0])
 
             # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
             # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
             db.commit()
             flash('You were successfully registered and can login now')
-            return redirect(url_for('login'))
+            session['logged_in'] = request.form['zid']
+            return redirect(url_for('index'))
     return render_template('signup.html', error=error)
 
 
@@ -302,13 +342,16 @@ def search():
     suggestion = request.args.get('search')
     if suggestion:
         # print("Searching ", suggestion)
-        search_users = query_db('SELECT * FROM USER WHERE full_name LIKE "%' + suggestion + '%"')
-        search_posts = query_db('SELECT * FROM POST WHERE message LIKE "%' + suggestion + '%"')
+        search_users = query_db('SELECT * FROM USER WHERE full_name LIKE ? OR zid = ? LIMIT 10',
+                                ['%{}%'.format(suggestion), suggestion])
+        search_users = add_attr_confirm(search_users)
+
+        search_posts = query_db('SELECT * FROM POST WHERE message LIKE ? LIMIT 10', ['%{}%'.format(suggestion)])
     else:
         print("no suggestion")
 
     return render_template('search_result.html',
-                           search_users=search_users, search_posts=search_posts)
+                           users=search_users, search_posts=search_posts)
 
 
 @app.route('/post', methods=['GET', 'POST'])
@@ -408,13 +451,77 @@ def delete_post():
     """ Delete a post"""
     if session['logged_in']:
         post_id = request.args.get('post_id')
-        print("post_id: ", post_id)
 
         db = get_db()
         result = db.execute('''DELETE FROM POST WHERE id = ? ''', [post_id])
         db.commit()
 
         return jsonify(return_code=0)
+
+
+@app.route('/add_friend')
+def add_friend():
+    """ send add friend request """
+    if session['logged_in']:
+        mate_zid = request.args.get('zid')
+        user_zid = g.user['zid']
+
+        if mate_zid != '' and user_zid != '':
+            db = get_db()
+            r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=?', [user_zid, mate_zid], one=True)
+
+            if not r:
+                db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
+                           [user_zid, mate_zid, 0])
+                db.commit()
+
+        return jsonify(return_code=0)
+
+
+@app.route('/remove_friend')
+def remove_friend():
+    """ remove a friend """
+    if session['logged_in']:
+        mate_zid = request.args.get('zid')
+        user_zid = g.user['zid']
+
+        if mate_zid != '' and user_zid != '':
+            db = get_db()
+            r = query_db('SELECT * FROM MATES WHERE (user_zid=? AND mate_zid=?) OR (mate_zid=? AND user_zid=?)',
+                         [user_zid, mate_zid, user_zid, mate_zid], one=True)
+
+            if r:
+                db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
+                           [user_zid, mate_zid])
+                db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
+                           [mate_zid, user_zid])
+                db.commit()
+
+        return jsonify(return_code=0)
+
+
+@app.route('/accept_friend')
+def accept_friend():
+    """ accept friend request """
+    if session['logged_in']:
+        mate_zid = request.args.get('zid')
+        user_zid = g.user['zid']
+
+        if mate_zid != '' and user_zid != '':
+            db = get_db()
+            r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=? AND confirmed=0',
+                         [mate_zid, user_zid], one=True)
+
+            if r:
+                db.execute('UPDATE MATES SET confirmed=1 WHERE user_zid=? AND mate_zid=? AND confirmed=0',
+                           [mate_zid, user_zid])
+                db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
+                           [user_zid, mate_zid, 0])
+                db.commit()
+            else:
+                error = 'request does not exit'
+
+        return jsonify(return_code=0, error=error)
 
 
 if __name__ == '__main__':

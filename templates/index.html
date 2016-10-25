@@ -2,8 +2,6 @@
 {% block title %}Index{% endblock %}
 
 {% block body %}
-    <script src="{{ url_for('static', filename='js/posts.js') }}"></script>
-
     {% if session['logged_in'] %}
         {% include 'common/new_post.html' %}
 
@@ -16,4 +14,7 @@
     {% else %}
         {% include 'common/register.html' %}
     {% endif %}
+
+
+    <script src="{{ url_for('static', filename='js/new_post.js') }}"></script>
 {% endblock %}

@@ -28,7 +28,8 @@ drop table if exists MATES;
 CREATE TABLE MATES (
     id INTEGER PRIMARY KEY   AUTOINCREMENT,
     user_zid TEXT REFERENCES USER(zid),
-    mate_zid TEXT
+    mate_zid TEXT,
+    confirmed INTEGER
 );
 
 drop table if exists ENROLLMENT;

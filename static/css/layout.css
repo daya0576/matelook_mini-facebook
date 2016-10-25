@@ -41,7 +41,7 @@ body {
     border-radius: 3px;
 }
 
-.profile_post_img {
+.posts .profile_post_img {
     display: block;
     margin-right: 8px;
     float: left;
@@ -92,7 +92,9 @@ body {
 .comments .reply img {
     width: 24px;
     height: 24px;
-    /*margin-top: 6px;*/
+    margin-top: 4px;
+    float: left;
+    margin-right: 6px;
 }
 
 .comments .reply .message {
@@ -107,6 +109,7 @@ body {
 .comment img {
     width: 32px;
     height: 32px;
+    float: left;
 }
 
 .comment .message {

@@ -1,0 +1,85 @@
+{% if users %}
+<div class="box_top" style="padding-right: 50px">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/parts_friends.css') }}">
+    <!--<h4>Users:</h4>-->
+    <ul>
+    {% for user in users %}
+        {% if user.full_name %}
+        <li>
+            <div class="friend_browser">
+                <a class="profile_a" href="{{ url_for('user_profile', user_zid=user.zid) }}">
+                    {% if user.profile_img %}
+                        <img class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user.profile_img }}">
+                    {% else %}
+                        <img class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
+                    {% endif %}
+                </a>
+                <div class="full_name"><strong><a href="{{ url_for('user_profile', user_zid=user.zid) }}">{{ user.full_name }}</a></strong></div>
+                <div class="add_friend">
+                    {% if user.zid == g.user.zid %}
+                    {% elif user.relation == 'friend' %}
+                        <button onclick="remove_friend(this)" type="button" class="btn btn-danger btn-sm" data-mate_zid="{{ user.zid }}">
+                            <strong>Remove Friend</strong>
+                        </button>
+                    {% elif user.relation == 'sent' %}
+                        <button type="button" class="btn btn-primary btn-sm" data-mate_zid="{{ user.zid }}" disabled>
+                            <strong>Request Sent</strong>
+                        </button>
+                    {% elif user.relation == 'no_friend' %}
+                        <button onclick="add_friend(this)" type="button" class="btn btn-primary btn-sm" data-mate_zid="{{ user.zid }}">
+                            <strong>Add Friend</strong>
+                        </button>
+
+                    {% elif user.relation == 'receive' %}
+                        <button onclick="accept_friend(this)" type="button" class="btn btn-info btn-sm" data-mate_zid="{{ user.zid }}">
+                            <strong>Accept Friend</strong>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+        {% endif %}
+    {% endfor %}
+    </ul>
+
+{% endif %}
+
+</div>
+<script>
+    function add_friend(obj){
+        var zid = $(obj).attr("data-mate_zid");
+        $.getJSON("{{ url_for('add_friend') }}", {zid: zid}, function(data){
+            if (data.return_code == 0) {
+                $(obj).html('<strong>Request Sent</strong>');
+                $(obj).attr('class', 'btn btn-primary btn-sm');
+                $(obj).attr('disabled','disabled');
+            }
+        });
+    }
+
+    function remove_friend(obj){
+        var zid = $(obj).attr("data-mate_zid");
+        var r = confirm("Are u sure to remove this cute friend? ");
+        if (r == true) {
+            $.getJSON("{{ url_for('remove_friend') }}", {zid: zid}, function (data) {
+                if (data.return_code == 0) {
+//                    $(obj).closest('.friend_browser').remove();
+                    $(obj).html('<strong>Removed</strong>');
+                    $(obj).attr('disabled','disabled');
+                }
+            });
+        }
+    }
+
+    function accept_friend(obj){
+        var zid = $(obj).attr("data-mate_zid");
+        $.getJSON("{{ url_for('accept_friend') }}", {zid: zid}, function(data){
+            if (data.return_code == 0) {
+                $(obj).html('<strong>Accepted</strong>');
+                $(obj).attr('disabled','disabled');
+            } else {
+                alert(data.error)
+            }
+        });
+    }
+</script>

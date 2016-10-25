@@ -1,0 +1,21 @@
+.friend_browser .profile_a, .full_name {
+    display: block;
+    float: left;
+}
+.friend_browser {
+    height: 50px;
+}
+
+.friend_browser .profile_post_img{
+    height: 40px;
+    padding-right: 10px;
+}
+
+ul {
+    list-style-type: none;
+}
+
+.friend_browser .add_friend {
+    float: right;
+    padding-left: 20px;
+}
