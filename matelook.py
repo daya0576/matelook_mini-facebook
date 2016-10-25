@@ -128,7 +128,7 @@ def get_refresh_comments(post_id):
 
 
 def add_attr_confirm(mates):
-    if g.user:
+    if g.user and mates is not None:
         user_zid = g.user['zid']
         mates = [dict(row) for row in mates]
         for mate in mates:
@@ -138,7 +138,7 @@ def add_attr_confirm(mates):
                                     [mate['zid'], user_zid], one=True)
 
             if (mate_sent and mate_sent['confirmed'] == 1) \
-                    or (mate_receive and mate_sent['confirmed'] == 1):
+                    or (mate_receive and mate_receive['confirmed'] == 1):
                 mate['relation'] = 'friend'
             elif mate_receive and mate_receive['confirmed'] == 0:
                 mate['relation'] = 'receive'
@@ -246,8 +246,8 @@ def user_profile(user_zid):
         SELECT * FROM MATES m
         LEFT JOIN USER u ON m.mate_zid = u.zid
         WHERE m.user_zid = ?''', [user_zid])
-    user_mates = [dict(row) for row in user_mates]
-    user_mates = add_attr_confirm(user_mates)
+    if user_mates:
+        user_mates = add_attr_confirm(user_mates)
 
     # get all the requests to g.user
     request_receive = query_db('''
@@ -256,7 +256,6 @@ def user_profile(user_zid):
     request_receive = [dict(row) for row in request_receive]
     for user in request_receive:
         user['relation'] = 'receive'
-        print(user['full_name'])
 
     user_mates = request_receive + user_mates
 
