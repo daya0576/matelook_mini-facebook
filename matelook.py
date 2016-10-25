@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 # all the imports
-import os, re
+import os
+import re
 from datetime import datetime
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
+from itsdangerous import URLSafeTimedSerializer
+
 
 # create our little application :)
 app = Flask(__name__)
@@ -17,7 +20,9 @@ app.config.update(dict(
     PROFILE_IMG_DIR="profile_img",
     # DATABASE=os.path.join(app.root_path, 'db/small_sqlite.db'),
     DATABASE=os.path.join(app.root_path, 'db/medium_SQLite.db'),
-    SECRET_KEY='development key',
+    SECRET_KEY='henry_zhu',
+    SECURITY_PASSWORD_SALT='henry_zhu_love_cc',
+
     USERNAME='admin',
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
@@ -120,6 +125,16 @@ def get_refresh_comments(post_id):
     comments_html = render_template('common/comments.html', comments=comments, post_id=post_id)
 
     return jsonify(post_id=post_id, comments_html=comments_html, comments_sum=comments_sum)
+
+
+def get_user(zid):
+    return query_db('SELECT * FROM USER WHERE zid = ?',
+                    [zid], one=True)
+
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
 
 
 @app.before_request
@@ -248,12 +263,36 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/sign_up')
+@app.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
     """ sign up"""
-    flash('You were logged out')
-    session.pop('logged_in', None)
-    return redirect(url_for('index'))
+    if g.user:
+        return redirect(url_for('index'))
+    error = None
+    if request.method == 'POST':
+        if not request.form['zid']:
+            error = 'You have to enter a username'
+        elif not request.form['email'] or \
+                '@' not in request.form['email']:
+            error = 'You have to enter a valid email address'
+        elif not request.form['password']:
+            error = 'You have to enter a password'
+        elif request.form['password'] != request.form['password_confirm']:
+            error = 'The two passwords do not match'
+        elif get_user(request.form['zid']) is not None:
+            error = 'The zid is already signed up.'
+        else:
+            db = get_db()
+            db.execute('''insert into user (zid, email, password, confirmed) values (?, ?, ?, ?)''',
+                       [request.form['zid'], request.form['email'],
+                        request.form['password'], 0])
+
+            # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+            # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
+            db.commit()
+            flash('You were successfully registered and can login now')
+            return redirect(url_for('login'))
+    return render_template('signup.html', error=error)
 
 
 @app.route('/search', methods=['GET'])

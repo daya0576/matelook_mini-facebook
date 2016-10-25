@@ -121,7 +121,7 @@ if __name__ == "__main__":
                            user_dict['full_name'], user_dict['birthday'], user_dict['profile_img'],
                            user_dict['program'],
                            user_dict['home_suburb'], user_dict['home_longitude'], user_dict['home_latitude']))
-    insert_sql = "INSERT INTO USER VALUES (?,?,?, ?,?,?, ?, ?,?,?)"
+    insert_sql = "INSERT INTO USER VALUES (?,?,?, ?,?,?, ?, ?,?,?, 1)"
     result = c.executemany(insert_sql, users_insert)
     print("   Totally {} users inserted".format(len(users_insert)))
 

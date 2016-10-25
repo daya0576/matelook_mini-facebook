@@ -18,8 +18,11 @@ create table USER (
 
     'home_suburb' text, 
     'home_longitude' text, 
-    'home_latitude' text
+    'home_latitude' text,
+
+    'confirmed' INTEGER
 );
+
 
 drop table if exists MATES;
 CREATE TABLE MATES (
