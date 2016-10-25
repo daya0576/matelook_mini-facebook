@@ -137,7 +137,8 @@ def add_attr_confirm(mates):
             mate_receive = query_db('SELECT confirmed FROM MATES WHERE user_zid = ? AND mate_zid = ?',
                                     [mate['zid'], user_zid], one=True)
 
-            if mate_sent and mate_receive:
+            if (mate_sent and mate_sent['confirmed'] == 1) \
+                    or (mate_receive and mate_sent['confirmed'] == 1):
                 mate['relation'] = 'friend'
             elif mate_receive and mate_receive['confirmed'] == 0:
                 mate['relation'] = 'receive'
@@ -255,6 +256,7 @@ def user_profile(user_zid):
     request_receive = [dict(row) for row in request_receive]
     for user in request_receive:
         user['relation'] = 'receive'
+        print(user['full_name'])
 
     user_mates = request_receive + user_mates
 
