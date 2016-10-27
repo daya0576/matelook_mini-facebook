@@ -364,7 +364,7 @@ def sign_up():
 def search():
     """ Searching for a user whose name containing a specified substring.
         Searching for posts containing particular words. """
-    suggestion = request.args.get('search')
+    suggestion = request.args.get('suggestion')
     if suggestion:
         # print("Searching ", suggestion)
         search_users = query_db('SELECT * FROM USER WHERE full_name LIKE ? OR zid = ? LIMIT 10',
@@ -380,11 +380,15 @@ def search():
 
         search_posts = get_post_comment_count(search_posts)
 
+        for post in search_posts:
+            post['message'] = post['message'].replace(suggestion, "<strong><mark>{}</mark></strong>".format(suggestion))
+
+        return render_template('search_result.html',
+                               users=search_users, posts=search_posts, pos_next_start=-1)
+
     else:
         print("no suggestion")
-
-    return render_template('search_result.html',
-                           users=search_users, posts=search_posts, pos_next_start=-1)
+        return
 
 
 @app.route('/post', methods=['GET', 'POST'])
