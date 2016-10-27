@@ -1,0 +1,16 @@
+
+<div>
+    {% if pos_next_start and pos_next_start == -1 %}
+        <div>
+            <div class="box_top load_more">End</div>
+        </div>
+    {% elif pos_next_start %}
+        <div onclick="load_more(this)" data-post_id_start="{{ pos_next_start }}">
+            <div class="box_top load_more">load more</div>
+        </div>
+    {% else %}
+        <div onclick="load_more(this)" data-post_id_start="{{ posts|length }}">
+            <div class="box_top load_more">load more</div>
+        </div>
+    {% endif %}
+</div>

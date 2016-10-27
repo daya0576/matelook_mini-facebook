@@ -190,9 +190,33 @@ def index():
         posts = sorted(posts, key=lambda x: x['time'], reverse=True)
         posts = posts[:10]
 
-        return render_template('index.html', posts=posts)
+        return render_template('index.html', posts=posts, load_more_from='index')
     else:
         return redirect(url_for('login'))
+
+
+@app.route('/load_more_index')
+def load_more_index():
+    if session['logged_in'] and request.args.get('post_id_start'):
+        post_id_start = int(request.args.get('post_id_start'))
+        # print("post_id_start", post_id_start)
+
+        user_zid = session['logged_in']
+        mate_posts = get_mate_posts(user_zid)
+        user_posts = get_user_posts(user_zid)
+
+        ''' combine mate and user post, get top 10 by time '''
+        posts = user_posts + mate_posts
+        posts = [dict(row) for row in posts]
+
+        posts = sorted(posts, key=lambda x: x['time'], reverse=True)
+        posts = posts[post_id_start:post_id_start+10]
+
+        pos_next_start = -1 if len(posts) < 10 else post_id_start+10
+
+        # print("pos_next_start", pos_next_start)
+
+        return render_template('common/posts.html', posts=posts, pos_next_start=pos_next_start)
 
 
 def get_post_comments_sub(post_id):

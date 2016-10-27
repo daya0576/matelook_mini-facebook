@@ -1,3 +1,4 @@
+<div id="time_line">
 {% for post in posts %}
     <div class="box_top">
         <div class="posts">
@@ -34,7 +35,9 @@
 
     <div id="post_{{ post.post_id }}_comments" class="box_bottom"></div>
 {% endfor %}
+</div>
 
+{% include 'common/load_more.html' %}
 
 
 <script>
@@ -69,5 +72,24 @@
             });
         }
     }
+
+
+
 </script>
 
+
+<script>
+    function load_more(obj) {
+
+        var post_id_start = $(obj).attr("data-post_id_start");
+//        alert(post_id_start);
+        $(obj).children().text("loading");
+        $.get("{{ url_for('load_more_index') }}", {post_id_start: post_id_start}, function(data){
+            $(obj).html('');
+
+            $("#time_line").append(data);
+        });
+    }
+
+
+</script>
