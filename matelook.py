@@ -371,12 +371,20 @@ def search():
                                 ['%{}%'.format(suggestion), suggestion])
         search_users = add_attr_confirm(search_users)
 
-        search_posts = query_db('SELECT * FROM POST WHERE message LIKE ? LIMIT 10', ['%{}%'.format(suggestion)])
+        search_posts = query_db('SELECT * FROM POST p LEFT JOIN USER u ON p.zid=u.zid WHERE message LIKE ? LIMIT 20', ['%{}%'.format(suggestion)])
+        search_posts = [dict(row) for row in search_posts]
+        search_posts = sorted(search_posts, key=lambda x: x['time'], reverse=True)
+
+        for post in search_posts:
+            post['post_id'] = post['id']
+
+        search_posts = get_post_comment_count(search_posts)
+
     else:
         print("no suggestion")
 
     return render_template('search_result.html',
-                           users=search_users, search_posts=search_posts)
+                           users=search_users, posts=search_posts, pos_next_start=-1)
 
 
 @app.route('/post', methods=['GET', 'POST'])

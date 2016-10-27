@@ -3,15 +3,26 @@
 
 {% block body %}
     <h2>Search Result:</h2>
-    {% include 'common/friends.html' %}
-    {% if search_posts %}
-        <h3>Posts:</h3>
-        {% for post in search_posts %}
-            <a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>
-            {{ post.time }}<br>
-            {{ post.message|safe }}<br>
-
-        {% endfor %}
+    <h4>Users:</h4>
+    {% if users %}
+        {% include 'common/friends.html' %}
+    {% else %}
+        Nothing found.
     {% endif %}
+    <div class="box_bottom"></div>
+
+    <h4>Posts:</h4>
+    {% if posts %}
+        <!--{% for post in posts %}-->
+            <!--<a href="{{ url_for('user_profile', user_zid=post.zid) }}">{{ post.full_name }}</a>-->
+            <!--{{ post.time }}<br>-->
+            <!--{{ post.message|safe }}<br>-->
+
+        <!--{% endfor %}-->
+        {% include 'common/posts.html' %}
+    {% else %}
+        Nothing found.
+    {% endif %}
+    <div class="box_bottom"></div>
 
 {% endblock %}
