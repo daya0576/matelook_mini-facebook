@@ -9,11 +9,17 @@
                  src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
                  alt=""> <br>
             {# Private information such as e-mail, password, lat, long and courses should not be displayed. #}
-            <text>ZID: {{ user_info.zid }}<br></text>
-            <text>Fullname: {{ user_info.full_name }}<br></text>
-            <text>Birthday: {{ user_info.birthday }}<br></text>
-            <text>Home Suburb: {{ user_info.home_suburb }}<br></text>
-            <text>Program: {{ user_info.program }}<br></text>
+            <text><label>ZID: </label> {{ user_info.zid }}<br></text>
+            <text><label>Fullname: </label>{{ user_info.full_name }}<br></text>
+            <text><label>Email: </label>{{ user_info.email }}<br></text>
+            <text><label>Birthday: </label>{{ user_info.birthday }}<br></text>
+            <text><label>Home Suburb:</label> {{ user_info.home_suburb }}<br></text>
+            <text><label>Program:</label> {{ user_info.program }}<br></text>
+            {% if user_info.profile_text != "" %}
+                <label>Profile Text: </label><br>
+                {{ user_info.profile_text }}<br>
+            {% endif %}
+            <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">Edit</a>
         </div>
 
 

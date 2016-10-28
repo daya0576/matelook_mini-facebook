@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block body %}
+    {% if session['logged_in'] %}
+    <div class="box_top" style="padding-bottom: 20px">
+        <form method="post" action="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">
+            <div class="form-group">
+                <label>ZID: </label>
+                <input type="text" class="form-control" aria-describedby="emailHelp"
+                       placeholder="Enter Fullname" name="zid" value="{{ user.zid }}" disabled>
+            </div>
+            <div class="form-group">
+                <label>Fullname</label><br>
+                <input type="text" class="form-control" aria-describedby="emailHelp"
+                       placeholder="Enter Fullname" name="full_name" value="{{ user.full_name }}">
+            </div>
+
+            <div class="form-group">
+                <label for="exampleInputEmail1">Email address</label>
+                <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+                       placeholder="Enter Email Address" name="email" value="{{ user.email }}">
+            </div>
+
+            <div class="form-group">
+                <label>Birthday</label>
+                <input type="date" class="form-control"
+                       name="birthday" value="{{ user.birthday }}">
+            </div>
+
+            <div class="form-group">
+                <label>Home Suburb</label>
+                <input type="text" class="form-control"
+                       placeholder="Enter Home Suburb" name="home_suburb" value="{{ user.home_suburb }}">
+            </div>
+
+            <div class="form-group">
+                <label>Program:</label>
+                <input type="text" class="form-control" aria-describedby="emailHelp"
+                       placeholder="Enter Fullname" name="program" value="{{ user.program }}">
+            </div>
+
+            <div class="form-group">
+                <label>Profile Text</label>
+                <textarea class="form-control" rows="3" name="profile_text"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Profile Image</label>
+                <input type="file" class="form-control-file" name="profile_img">
+                <small id="fileHelp" class="form-text text-muted">
+                </small>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <div class="box_bottom"></div>
+    {% else %}
+        Please sign in first.
+    {% endif %}
+
+
+{% endblock %}

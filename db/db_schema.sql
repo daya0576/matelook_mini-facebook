@@ -20,6 +20,8 @@ create table USER (
     'home_longitude' text, 
     'home_latitude' text,
 
+
+    'profile_text' text,
     'confirmed' INTEGER
 );
 

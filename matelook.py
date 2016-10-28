@@ -260,7 +260,7 @@ def user_profile(user_zid):
     ''' get user basic info '''
     user_posts = get_user_posts(user_zid)
 
-    ''' combine mate and user post, get top 10 by time '''
+    ''' get user posts '''
     posts = user_posts
     posts = [dict(row) for row in posts]
     posts = sorted(posts, key=lambda x: x['time'], reverse=True)
@@ -286,7 +286,8 @@ def user_profile(user_zid):
     return render_template('test_users.html',
                            user_info=user_info,
                            posts=posts,
-                           users=user_mates)
+                           users=user_mates,
+                           pos_next_start=-1)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -561,6 +562,41 @@ def accept_friend():
 
         return jsonify(return_code=0, error=error)
 
+
+def check_input(text):
+    return "" if text is None else text
+
+
+@app.route('/user/<user_zid>/edit', methods=['GET', 'POST'])
+def user_edit_profile(user_zid):
+    if request.method == 'POST':
+        print(user_zid)
+        full_name = check_input(request.form['full_name'])
+        email = check_input(request.form['email'])
+
+        birthday = check_input(request.form['birthday'])
+        print(birthday)
+        if len(birthday) == 10:
+            birthday = birthday.replace('-', '/')
+            birthday = "{}/{}/{}".format(birthday[6:], birthday[3:5], birthday[0:2])
+
+        home_suburb = check_input(request.form['home_suburb'])
+        program = check_input(request.form['program'])
+
+        profile_text = check_input(request.form['profile_text'])
+        profile_img = check_input(request.form['profile_img'])
+
+        db = get_db()
+        db.execute('''UPDATE USER SET full_name=?, email=?, birthday=?, home_suburb=?, program=?,
+                      profile_text=?, profile_img=?
+                      WHERE zid=? ''',
+                   [full_name, email, birthday, home_suburb, program,
+                    profile_text, profile_img, user_zid])
+        # db.commit()
+
+        return redirect(url_for('user_profile', user_zid=user_zid))
+    else:
+        return render_template('profile_edit.html', user=get_user(zid=user_zid))
 
 if __name__ == '__main__':
     app.run()
