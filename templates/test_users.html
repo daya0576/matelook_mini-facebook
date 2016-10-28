@@ -5,9 +5,13 @@
     {% if user_info %}
         <h3>Profile:</h3>
         <div class="box_top" style="padding-bottom: 15px">
+            <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">
             <img style="width: 100px; padding-bottom: 15px"
                  src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
-                 alt=""> <br>
+                 alt="">
+            </a>
+            <br>
+
             {# Private information such as e-mail, password, lat, long and courses should not be displayed. #}
             <text><label>ZID: </label> {{ user_info.zid }}<br></text>
             <text><label>Fullname: </label>{{ user_info.full_name }}<br></text>
@@ -19,6 +23,8 @@
                 <label>Profile Text: </label><br>
                 {{ user_info.profile_text }}<br>
             {% endif %}
+
+            <div style="height: 10px"></div>
             <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">Edit</a>
         </div>
 

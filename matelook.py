@@ -9,17 +9,21 @@ import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
 from itsdangerous import URLSafeTimedSerializer
+from werkzeug.utils import secure_filename
 
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+# DB_TYPE = 'small'
+DB_TYPE = 'medium'
 
 # create our little application :)
 app = Flask(__name__)
 app.config.from_object(__name__)
+app.config['UPLOAD_FOLDER'] = '/tmp/'
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
     PROFILE_IMG_DIR="profile_img",
-    # DATABASE=os.path.join(app.root_path, 'db/small_sqlite.db'),
-    DATABASE=os.path.join(app.root_path, 'db/medium_SQLite.db'),
+    DATABASE=os.path.join(app.root_path, 'db/{}_SQLite.db'.format(DB_TYPE)),
     SECRET_KEY='henry_zhu',
     SECURITY_PASSWORD_SALT='henry_zhu_love_cc',
 
@@ -27,7 +31,7 @@ app.config.update(dict(
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
-    SITE_NAME='Fadebook'
+    SITE_NAME='Fadebook',
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -151,10 +155,17 @@ def add_attr_confirm(mates):
     return mates
 
 
-def get_user(zid=-1, email=''):
-    return query_db('SELECT * FROM USER WHERE zid = ? OR email = ?',
+def get_user(zid=-1, email='-1'):
+    user = query_db('SELECT * FROM USER WHERE zid = ? OR email = ?',
                     [zid, email], one=True)
+    if user:
+        user = dict(user)
+        if user['profile_img'] == '':
+            user['profile_img'] = 'default.png'
 
+        return user
+    else:
+        return None
 
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -254,8 +265,7 @@ def get_post_comments():
 
 @app.route('/user/<user_zid>')
 def user_profile(user_zid):
-    user_info = query_db('SELECT * FROM USER WHERE zid = ?',
-                         [user_zid], one=True)
+    user_info = get_user(zid=user_zid)
 
     ''' get user basic info '''
     user_posts = get_user_posts(user_zid)
@@ -567,24 +577,57 @@ def check_input(text):
     return "" if text is None else text
 
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/user/<user_zid>/edit', methods=['GET', 'POST'])
 def user_edit_profile(user_zid):
+    user = get_user(zid=user_zid)
     if request.method == 'POST':
-        print(user_zid)
+
         full_name = check_input(request.form['full_name'])
         email = check_input(request.form['email'])
 
         birthday = check_input(request.form['birthday'])
-        print(birthday)
         if len(birthday) == 10:
-            birthday = birthday.replace('-', '/')
-            birthday = "{}/{}/{}".format(birthday[6:], birthday[3:5], birthday[0:2])
+            birthday = birthday
+            # birthday = birthday.replace('-', '/')
+            # birthday = "{}/{}/{}".format(birthday[6:], birthday[3:5], birthday[0:2])
+        else:
+            birthday = user['birthday']
 
         home_suburb = check_input(request.form['home_suburb'])
         program = check_input(request.form['program'])
 
         profile_text = check_input(request.form['profile_text'])
-        profile_img = check_input(request.form['profile_img'])
+
+        file = None
+        # print(request.files)
+        if 'profile_img' not in request.files:
+            # flash('No file part')
+            # profile_img = user['profile_img']
+            # print('filename:', 'shit')
+            pass
+        else:
+            file = request.files['profile_img']
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            db_img_path = 'dataset-{}/{}/'.format(DB_TYPE, user['zid'])
+
+            st_img_path = 'static/user/{}/{}'.format(app.config['PROFILE_IMG_DIR'], db_img_path)
+            st_img_path = os.path.join(st_img_path, 'profile.jpg')
+            abs_st_img_path = os.path.abspath(st_img_path)
+            # print(abs_st_img_path)
+
+            # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file.save(abs_st_img_path)
+
+            profile_img = os.path.join(db_img_path, 'profile.jpg')
+        else:
+            profile_img = user['profile_img']
 
         db = get_db()
         db.execute('''UPDATE USER SET full_name=?, email=?, birthday=?, home_suburb=?, program=?,
@@ -592,11 +635,12 @@ def user_edit_profile(user_zid):
                       WHERE zid=? ''',
                    [full_name, email, birthday, home_suburb, program,
                     profile_text, profile_img, user_zid])
-        # db.commit()
+
+        db.commit()
 
         return redirect(url_for('user_profile', user_zid=user_zid))
     else:
-        return render_template('profile_edit.html', user=get_user(zid=user_zid))
+        return render_template('profile_edit.html', user=user)
 
 if __name__ == '__main__':
     app.run()
