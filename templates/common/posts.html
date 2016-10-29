@@ -9,14 +9,25 @@
                 <strong>{{ post.full_name }}</strong>
             </a>
             <br>
-            <span class="post_time">{{ post.time }}
+            <span class="post_time">
+                <a style="color: #90949c" href="javascript:void(0)" data-toggle="tooltip" data-placement="bottom"
+                   title=" {{ post.time }} ">
+                    {{ post.time_show }}
+                </a>
+
                 <span role="presentation" aria-hidden="true"> · </span>
                 {% if post.privacy == "public" %}
-                    <i class="fa fa-globe" aria-hidden="true"></i>
+                    <a style="color: #90949c" href="javascript:void(0)" data-toggle="tooltip" data-placement="top" title=" Public ">
+                        <i class="fa fa-globe" aria-hidden="true"></i>
+                    </a>
                 {% elif post.privacy == "friends" %}
-                    <i class="fa fa-users" aria-hidden="true"></i>
+                    <a style="color: #90949c" href="javascript:void(0)" data-toggle="tooltip" data-placement="top" title=" Public ">
+                        <i class="fa fa-users" aria-hidden="true"></i>
+                    </a>
                 {% elif post.privacy == "onlyme" %}
-                    <i class="fa fa-user" aria-hidden="true"></i>
+                    <a style="color: #90949c" href="javascript:void(0)" data-toggle="tooltip" data-placement="top" title=" Public ">
+                        <i class="fa fa-user" aria-hidden="true"></i>
+                    </a>
                 {% else %}
                 {% endif %}
             </span>
@@ -102,4 +113,10 @@
     }
 
 
+</script>
+
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
 </script>

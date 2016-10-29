@@ -4,7 +4,7 @@
 # all the imports
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
@@ -61,14 +61,42 @@ def get_db():
 
 
 # common functions
-def time_date2txt(cur_time=''):
-    if cur_time == '':
-        cur_time = datetime.utcnow()
-        cur_time = cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
-    else:
-        cur_time = 'unknow'
+def time_date2txt(cur_time=None):
+    if cur_time is None:
+        cur_time = datetime.now(timezone.utc)
 
-    return cur_time
+    cur_time_text = cur_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    return cur_time_text
+
+
+def time_txt2date(time_text):
+    date_object = datetime.strptime(time_text, "%Y-%m-%dT%H:%M:%S%z")
+    return date_object
+
+
+def show_time(time):
+    time_show = ''
+    date_record = time_txt2date(time)
+    date_now = datetime.now()
+
+    sub_s = int(date_now.timestamp()-date_record.timestamp())
+
+    if sub_s < 60:
+        time_show = 'Just now'
+    elif sub_s/60 < 60:
+        time_show = '{} minutes'.format(sub_s//60)
+    elif sub_s/60/60 < 24:
+        hours = sub_s // 60 // 60
+        time_show = '{} hrs'.format(hours) if hours != 1 else '{} hr'.format(hours)
+    elif sub_s/60/60/24 >= 1:
+        day = int(sub_s/60/60/24)
+        if day == 1:
+            time_show = 'yesterday'
+        else:
+            time_show = '{} days ago'.format(day)
+
+    return time_show
 
 
 def handle_message(text):
@@ -215,6 +243,9 @@ def index():
         posts = sorted(posts, key=lambda x: x['time'], reverse=True)
         posts = posts[:10]
 
+        for post in posts:
+            post['time_show'] = show_time(post['time'])
+
         return render_template('index.html',
                                posts=posts,
                                load_more_from='index',
@@ -238,11 +269,13 @@ def load_more_index():
         posts = [dict(row) for row in posts]
 
         posts = sorted(posts, key=lambda x: x['time'], reverse=True)
-        posts = posts[post_id_start:post_id_start+10]
+        posts = posts[post_id_start:post_id_start + 10]
 
-        pos_next_start = -1 if len(posts) < 10 else post_id_start+10
+        pos_next_start = -1 if len(posts) < 10 else post_id_start + 10
 
         # print("pos_next_start", pos_next_start)
+        for post in posts:
+            post['time_show'] = show_time(post['time'])
 
         return render_template('common/posts.html', posts=posts, pos_next_start=pos_next_start)
 
@@ -291,6 +324,9 @@ def user_profile(user_zid):
     posts = user_posts
     posts = [dict(row) for row in posts]
     posts = sorted(posts, key=lambda x: x['time'], reverse=True)
+    '''format time'''
+    for post in posts:
+        post['time_show'] = show_time(post['time'])
 
     ''' user friends'''
     user_mates = query_db('''
@@ -428,6 +464,10 @@ def search():
 
         for post in filtered_search_posts:
             post['message'] = post['message'].replace(suggestion, "<strong>{}</strong>".format(suggestion))
+
+        '''format time'''
+        for post in filtered_search_posts:
+            post['time_show'] = show_time(post['time'])
 
         return render_template('search_result.html',
                                users=search_users, posts=filtered_search_posts, pos_next_start=-1)
