@@ -3,8 +3,12 @@
 
 }
 
+.mainContainer #new_post_text {
+    height: 100px;
+}
+
 .mainContainer #new_post {
-    height: 136px;
+    height: 163px;
 }
 
 .post_form .new_post_button {
@@ -12,8 +16,9 @@
     line-height: 22px;
     padding: 0 16px;
     margin: 10px 0;
-    height: 30px;
     float: right;
+
+    height: 28px;
 
     vertical-align: baseline;
 }

@@ -9,7 +9,17 @@
                 <strong>{{ post.full_name }}</strong>
             </a>
             <br>
-            <span class="post_time">{{ post.time }}</span>
+            <span class="post_time">{{ post.time }}
+                <span role="presentation" aria-hidden="true"> · </span>
+                {% if post.privacy == "public" %}
+                    <i class="fa fa-globe" aria-hidden="true"></i>
+                {% elif post.privacy == "friends" %}
+                    <i class="fa fa-users" aria-hidden="true"></i>
+                {% elif post.privacy == "onlyme" %}
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                {% else %}
+                {% endif %}
+            </span>
 
             <p class="message">{{ post.message|safe }}</p>
 

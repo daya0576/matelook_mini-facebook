@@ -19,7 +19,10 @@
                     {% if user.zid == g.user.zid %}
                     {% elif user.relation == 'friend' %}
                         <button onclick="remove_friend(this)" type="button" class="btn btn-danger btn-sm" data-mate_zid="{{ user.zid }}">
-                            <strong>Remove Friend</strong>
+                            <strong>
+                                <i class="fa fa-user-times" aria-hidden="true"></i>
+                                Remove Friend
+                            </strong>
                         </button>
                     {% elif user.relation == 'sent' %}
                         <button type="button" class="btn btn-primary btn-sm" data-mate_zid="{{ user.zid }}" disabled>
@@ -27,7 +30,10 @@
                         </button>
                     {% elif user.relation == 'no_friend' %}
                         <button onclick="add_friend(this)" type="button" class="btn btn-primary btn-sm" data-mate_zid="{{ user.zid }}">
-                            <strong>Add Friend</strong>
+                            <strong>
+                                <i class="fa fa-user-plus" aria-hidden="true"></i>
+                                Add Friend
+                            </strong>
                         </button>
 
                     {% elif user.relation == 'receive' %}

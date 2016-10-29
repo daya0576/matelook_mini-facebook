@@ -110,10 +110,11 @@
 
 
     $(function() {
-      var submit_form = function(e, post_id, comment) {
+      var submit_form = function(e, i, post_id, comment) {
           if (comment == ''){
               alert('Comment cannot be empty.');
           } else {
+              $(i).prop('disabled', true);
               $.getJSON("{{ url_for('new_comment') }}", {
                   comment: comment,
                   post_id: post_id
@@ -130,7 +131,7 @@
               var comment = $(this).val();
               var post_id = $(this).attr("data-post_id");
 
-              submit_form(e, post_id, comment);
+              submit_form(e, this, post_id, comment);
           }
       });
 
@@ -146,28 +147,29 @@
         }
     }
 
-    $(function() {
-        var submit_form = function(e, comment_id, reply) {
-            if (reply == ''){
+    $(function () {
+        var submit_form = function (e, i, comment_id, reply) {
+            if (reply == '') {
                 alert('Reply cannot be empty.');
             } else {
-              $.getJSON("{{ url_for('new_reply') }}", {
-                  reply: reply,
-                  comment_id: comment_id
-              }, function(data) {
-                  refresh_comments(data);
-              });
-              return false;
+                $(i).prop('disabled', true);
+                $.getJSON("{{ url_for('new_reply') }}", {
+                    reply: reply,
+                    comment_id: comment_id
+                }, function (data) {
+                    refresh_comments(data);
+                });
+                return false;
             }
         };
 
         $('input[name="add_reply"]').unbind();
-        $('input[name="add_reply"]').bind('keydown', function(e) {
+        $('input[name="add_reply"]').bind('keydown', function (e) {
             if (e.keyCode == 13) {
                 var reply = $(this).val();
                 var comment_id = $(this).attr("data-comment_id");
 
-                submit_form(e, comment_id, reply);
+                submit_form(e, this, comment_id, reply);
             }
         });
 

@@ -61,8 +61,14 @@ def get_db():
 
 
 # common functions
-def time_date2txt(cur_time=datetime.utcnow()):
-    return cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
+def time_date2txt(cur_time=''):
+    if cur_time == '':
+        cur_time = datetime.utcnow()
+        cur_time = cur_time.strftime("%Y-%m-%dT%H:%M:%S+0000")
+    else:
+        cur_time = 'unknow'
+
+    return cur_time
 
 
 def handle_message(text):
@@ -101,7 +107,7 @@ def get_post_comment_count(posts):
 
 
 def get_user_posts(user_zid):
-    user_posts = query_db('''SELECT p.id as post_id, time, message, full_name, u.zid as zid, profile_img
+    user_posts = query_db('''SELECT p.id as post_id, time, message, privacy, full_name, u.zid as zid, profile_img
                              FROM POST p JOIN USER u ON u.zid=p.zid
                              WHERE u.zid = ? ORDER BY time DESC''',
                           [user_zid])
@@ -109,10 +115,10 @@ def get_user_posts(user_zid):
     return user_posts
 
 
-def get_mate_posts(user_zid):
-    mate_posts = query_db('SELECT p.id as post_id, time, message, full_name, m.mate_zid as zid, profile_img '
+def get_mate_posts(user_zid, cond=''):
+    mate_posts = query_db('SELECT p.id as post_id, time, message, privacy, full_name, m.mate_zid as zid, profile_img '
                           'FROM POST p JOIN MATES m ON p.zid = m.mate_zid JOIN USER u ON u.zid=p.zid '
-                          'WHERE m.user_zid= ? ORDER BY time DESC',
+                          'WHERE m.user_zid= ? {} ORDER BY time DESC'.format(cond),
                           [user_zid])
     mate_posts = get_post_comment_count(mate_posts)
     return mate_posts
@@ -168,6 +174,13 @@ def get_user(zid=-1, email='-1'):
         return None
 
 
+def get_all_mates(zid):
+    mates = query_db('''SELECT * FROM MATES m JOIN USER u ON u.zid = m.mate_zid WHERE m.user_zid = ? ''',
+                     [zid])
+    mates = [dict(row) for row in mates]
+    return mates
+
+
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
@@ -192,7 +205,7 @@ def close_db(error):
 def index():
     if 'logged_in' in session:
         user_zid = session['logged_in']
-        mate_posts = get_mate_posts(user_zid)
+        mate_posts = get_mate_posts(user_zid, "AND p.privacy != 'onlyme'")
         user_posts = get_user_posts(user_zid)
 
         ''' combine mate and user post, get top 10 by time '''
@@ -212,7 +225,7 @@ def index():
 
 @app.route('/load_more_index')
 def load_more_index():
-    if session['logged_in'] and request.args.get('post_id_start'):
+    if session.get('logged_in') and request.args.get('post_id_start'):
         post_id_start = int(request.args.get('post_id_start'))
         # print("post_id_start", post_id_start)
 
@@ -386,20 +399,38 @@ def search():
                                 ['%{}%'.format(suggestion), suggestion])
         search_users = add_attr_confirm(search_users)
 
-        search_posts = query_db('SELECT * FROM POST p LEFT JOIN USER u ON p.zid=u.zid WHERE message LIKE ? LIMIT 20', ['%{}%'.format(suggestion)])
+        ''' searching post '''
+        search_posts = query_db('''SELECT * FROM POST p
+                                   LEFT JOIN USER u ON p.zid=u.zid WHERE message LIKE ? LIMIT 20''',
+                                ['%{}%'.format(suggestion)])
         search_posts = [dict(row) for row in search_posts]
-        search_posts = sorted(search_posts, key=lambda x: x['time'], reverse=True)
 
+        ''' filter posts based on privacy '''
+        # all mates of user.
+        mates_zid = []
+        if session.get('logged_in'):
+            mates_zid = [mate['mate_zid'] for mate in get_all_mates(session['logged_in'])]
+
+        filtered_search_posts = []
         for post in search_posts:
             post['post_id'] = post['id']
+            if post['privacy'] == 'public':
+                filtered_search_posts.append(post)
+            elif session.get('logged_in'):
+                if post['zid'] in mates_zid and post['privacy'] == 'friends':
+                    filtered_search_posts.append(post)
+                elif post['zid'] == session['logged_in']:
+                    filtered_search_posts.append(post)
 
-        search_posts = get_post_comment_count(search_posts)
+        filtered_search_posts = sorted(filtered_search_posts, key=lambda x: x['time'], reverse=True)
 
-        for post in search_posts:
-            post['message'] = post['message'].replace(suggestion, "<strong><mark>{}</mark></strong>".format(suggestion))
+        filtered_search_posts = get_post_comment_count(filtered_search_posts)
+
+        for post in filtered_search_posts:
+            post['message'] = post['message'].replace(suggestion, "<strong>{}</strong>".format(suggestion))
 
         return render_template('search_result.html',
-                               users=search_users, posts=search_posts, pos_next_start=-1)
+                               users=search_users, posts=filtered_search_posts, pos_next_start=-1)
 
     else:
         print("no suggestion")
@@ -410,7 +441,7 @@ def search():
 def post():
     """Post new message"""
     error = None
-    if session['logged_in'] and request.method == 'POST'\
+    if session.get('logged_in') and request.method == 'POST'\
             and request.form['message'] != '' and request.form['message'] is not None:
         user_zid = session['logged_in']
         post_message = request.form['message']
@@ -431,7 +462,7 @@ def post():
 @app.route('/new_comment')
 def new_comment():
     """Post new comment"""
-    if session['logged_in']:
+    if session.get('logged_in'):
         user_zid = session['logged_in']
         comment = request.args.get('comment')
         post_id = request.args.get('post_id')
@@ -448,7 +479,7 @@ def new_comment():
 @app.route('/delete_comment')
 def delete_comment():
     """ Delete a comment"""
-    if session['logged_in']:
+    if session.get('logged_in'):
         user_zid = session['logged_in']
         comment_id = request.args.get('comment_id')
 
@@ -466,7 +497,7 @@ def delete_comment():
 @app.route('/new_post', methods=['GET', 'POST'])
 def new_reply():
     """Post new reply"""
-    if session['logged_in']:
+    if session.get('logged_in'):
         user_zid = session['logged_in']
         reply = request.args.get('reply')
         comment_id = request.args.get('comment_id')
@@ -486,7 +517,7 @@ def new_reply():
 @app.route('/delete_reply')
 def delete_reply():
     """ Delete a reply"""
-    if session['logged_in']:
+    if session.get('logged_in'):
         reply_id = request.args.get('reply_id')
 
         reply = query_db('SELECT * FROM REPLY WHERE id=?', [reply_id], one=True)
@@ -505,7 +536,7 @@ def delete_reply():
 @app.route('/delete_post')
 def delete_post():
     """ Delete a post"""
-    if session['logged_in']:
+    if session.get('logged_in'):
         post_id = request.args.get('post_id')
 
         db = get_db()
@@ -518,7 +549,7 @@ def delete_post():
 @app.route('/add_friend')
 def add_friend():
     """ send add friend request """
-    if session['logged_in']:
+    if session.get('logged_in'):
         mate_zid = request.args.get('zid')
         user_zid = g.user['zid']
 
@@ -537,7 +568,7 @@ def add_friend():
 @app.route('/remove_friend')
 def remove_friend():
     """ remove a friend """
-    if session['logged_in']:
+    if session.get('logged_in'):
         mate_zid = request.args.get('zid')
         user_zid = g.user['zid']
 
@@ -560,7 +591,7 @@ def remove_friend():
 def accept_friend():
     """ accept friend request """
     error = ''
-    if session['logged_in']:
+    if session.get('logged_in'):
         mate_zid = request.args.get('zid')
         user_zid = g.user['zid']
 
