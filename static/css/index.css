@@ -1,18 +1,22 @@
-.post_form{
+.post_form {
     text-align: right;
 
 }
 
-.post_form button{
+.mainContainer #new_post {
+    height: 136px;
+}
+
+.post_form .new_post_button {
     font-size: 14px;
     line-height: 22px;
     padding: 0 16px;
     margin: 10px 0;
+    height: 30px;
+    float: right;
 
     vertical-align: baseline;
 }
-
-
 
 .add_comment {
     height: 32px;
@@ -21,27 +25,25 @@
 }
 
 .add_comment .left {
-    float:left;
-    margin-right:-32px;
+    float: left;
+    margin-right: -32px;
     width: 32px;
 }
 
 .add_comment .right {
-    float:right;
+    float: right;
     width: 100%;
 }
 
 .add_comment .right .rightc {
-    margin-left:40px;
+    margin-left: 40px;
 }
 
 .add_comment .right .rightc input {
     width: 100%;
 }
 
-
-
-.add_reply .profile_post_img{
+.add_reply .profile_post_img {
     width: 24px;
     height: 24px;
     margin-top: 6px;
@@ -61,19 +63,19 @@
 }
 
 .add_reply .left {
-    float:left;
-    margin-right:-24px;
+    float: left;
+    margin-right: -24px;
     width: 24px;
 }
 
 .add_reply .right {
-    float:right;
+    float: right;
     width: 100%;
     margin-top: 6px;
 }
 
 .add_reply .right .rightc {
-    margin-left:28px;
+    margin-left: 28px;
 }
 
 .add_reply .right .rightc input {
@@ -81,7 +83,6 @@
     width: 100%;
     padding: 6px 6px;
 }
-
 
 .form-signin {
     max-width: 330px;

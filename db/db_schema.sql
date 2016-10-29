@@ -2,78 +2,79 @@
 -- 'full_name', 'mates', 'birthday',  'profile_img', 
 -- 'program', 'courses', 
 -- 'home_suburb', 'home_longitude', 'home_latitude'
-drop table if exists USER;
-create table USER (
-    'zid' text primary key not null,
-    'email' text,
-    'password' text not null,
+DROP TABLE IF EXISTS USER;
+CREATE TABLE USER (
+  'zid'            TEXT PRIMARY KEY NOT NULL,
+  'email'          TEXT,
+  'password'       TEXT             NOT NULL,
 
-    'full_name' text, 
-    -- 'mates' text, 
-    'birthday' text, 
-    'profile_img' text, 
+  'full_name'      TEXT,
+  -- 'mates' text,
+  'birthday'       TEXT,
+  'profile_img'    TEXT,
 
-    'program' text, 
-    -- 'courses' text, 
+  'program'        TEXT,
+  -- 'courses' text,
 
-    'home_suburb' text, 
-    'home_longitude' text, 
-    'home_latitude' text,
+  'home_suburb'    TEXT,
+  'home_longitude' TEXT,
+  'home_latitude'  TEXT,
 
 
-    'profile_text' text,
-    'confirmed' INTEGER
+  'profile_text'   TEXT,
+  'confirmed'      INTEGER
 );
 
 
-drop table if exists MATES;
+DROP TABLE IF EXISTS MATES;
 CREATE TABLE MATES (
-    id INTEGER PRIMARY KEY   AUTOINCREMENT,
-    user_zid TEXT REFERENCES USER(zid),
-    mate_zid TEXT,
-    confirmed INTEGER
+  id        INTEGER PRIMARY KEY   AUTOINCREMENT,
+  user_zid  TEXT REFERENCES USER (zid),
+  mate_zid  TEXT,
+  confirmed INTEGER
 );
 
-drop table if exists ENROLLMENT;
+DROP TABLE IF EXISTS ENROLLMENT;
 CREATE TABLE ENROLLMENT
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    zid TEXT  REFERENCES USER(zid),
-    course TEXT
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  zid    TEXT REFERENCES USER (zid),
+  course TEXT
 );
 
 
-
-drop table if exists POST;
+DROP TABLE IF EXISTS POST;
 CREATE TABLE POST
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    zid TEXT  REFERENCES USER(zid),
-    time TEXT,
-    latitude TEXT,
-    longitude TEXT,
-    message TEXT
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  zid       TEXT REFERENCES USER (zid),
+  time      TEXT,
+  latitude  TEXT,
+  longitude TEXT,
+  message   TEXT,
+
+  privacy   TEXT
 );
 
-drop table if exists COMMENT;
+DROP TABLE IF EXISTS COMMENT;
 CREATE TABLE COMMENT
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    post_id INTEGER REFERENCES POST(id),
-    zid TEXT REFERENCES USER(zid),
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER REFERENCES POST (id),
+  zid     TEXT REFERENCES USER (zid),
 
-    time TEXT,
-    message TEXT
+  time    TEXT,
+  message TEXT
 );
 
-drop table if exists REPLY;
+DROP TABLE IF EXISTS REPLY;
 CREATE TABLE REPLY
 (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    comment_id INTEGER REFERENCES COMMENT(id),
-    zid TEXT REFERENCES USER(zid),
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  comment_id INTEGER REFERENCES COMMENT (id),
+  zid        TEXT REFERENCES USER (zid),
 
-    time TEXT,
-    message TEXT
+  time       TEXT,
+  message    TEXT
 );
 

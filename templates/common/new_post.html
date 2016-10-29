@@ -1,7 +1,41 @@
 <div id="new_post" class="box_top">
     <form class="post_form" action="{{ url_for('post') }}" method="post">
-        <textarea id="new_post_text" class="form-control" rows="3" name="message" placeholder="What's on your mind?"></textarea>
-        <button type="submit" class="btn btn-primary"><strong>Post</strong></button>
+        <textarea id="new_post_text" class="form-control" rows="3" name="message"
+                  placeholder="What's on your mind?"></textarea>
+
+        <button type="submit" class="btn btn-primary new_post_button"><strong>Post</strong></button>
+        <div class="dropdown new_post_button">
+            <button id="new_post_privacy" type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                Public <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                <li class="dropdown-header">Who should see this?</li>
+                <li><a data-privacy="public" href="#">Public</a></li>
+                <li><a data-privacy="friends" href="#">Friends</a></li>
+                <li><a data-privacy="onlyme" href="#">Only Me</a></li>
+                <!--<li role="separator" class="divider"></li>-->
+                <!--<li><a href="#">Separated link</a></li>-->
+            </ul>
+        </div>
+        <input id="new_post_privacy_input" type="hidden" name="post_privacy" value="public">
     </form>
 </div>
 <div class="box_bottom"></div>
+
+<script>
+    $(function () {
+
+        $(".dropdown-menu li a").click(function () {
+
+            $("#new_post_privacy").html($(this).text()+' <span class="caret"></span>');
+            $("#new_post_privacy_input").val($(this).attr("data-privacy"));
+
+        });
+
+    });
+</script>
+
+{% if new_post_error %}
+<script>alert("{{ new_post_error }}")</script>
+{% endif %}

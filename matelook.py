@@ -167,6 +167,7 @@ def get_user(zid=-1, email='-1'):
     else:
         return None
 
+
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
@@ -201,7 +202,10 @@ def index():
         posts = sorted(posts, key=lambda x: x['time'], reverse=True)
         posts = posts[:10]
 
-        return render_template('index.html', posts=posts, load_more_from='index')
+        return render_template('index.html',
+                               posts=posts,
+                               load_more_from='index',
+                               new_post_error=request.args.get('new_post_error'))
     else:
         return redirect(url_for('login'))
 
@@ -405,19 +409,23 @@ def search():
 @app.route('/post', methods=['GET', 'POST'])
 def post():
     """Post new message"""
+    error = None
     if session['logged_in'] and request.method == 'POST'\
             and request.form['message'] != '' and request.form['message'] is not None:
         user_zid = session['logged_in']
         post_message = request.form['message']
-        # print('post_message: "{}"'.format(post_message))
+        post_privacy = request.form['post_privacy']
+        # print('post_privacy: "{}"'.format(post_privacy))
         cur_time_txt = time_date2txt()
 
         db = get_db()
-        db.execute('INSERT INTO POST (zid, time, message) values (?, ?, ?)',
-                   [user_zid, cur_time_txt, post_message])
+        db.execute('INSERT INTO POST (zid, time, message, privacy) values (?, ?, ?, ?)',
+                   [user_zid, cur_time_txt, post_message, post_privacy])
         db.commit()
+    elif request.form['message'] == '' or request.form['message'] is None:
+        error = "Post cannot be empty"
 
-    return redirect(url_for('index'))
+    return redirect(url_for('index', new_post_error=error))
 
 
 @app.route('/new_comment')

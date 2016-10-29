@@ -8,8 +8,12 @@
         <div class="login">
             <form class="form-signin" method="post">
                 <h2 class="form-signin-heading">Please sign in</h2>
+
                 <input type="text" class="form-control" name="zid" value="{{ request.form.zid }}" placeholder="ZID">
                 <input type="password" class="form-control" name="password" placeholder="Password" required="">
+                <!--<small>e.g. z3489385/111111 - medium</small><br>-->
+                <small>e.g. z5014861/chelsea - medium</small>
+
                 {% if error %}
                     <span class="label label-warning">{{ error }}</span>
                 {% endif %}

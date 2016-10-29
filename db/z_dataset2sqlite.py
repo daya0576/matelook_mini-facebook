@@ -21,7 +21,6 @@ def text2pair(text):
     text_items = text.split('=', maxsplit=1)
     if len(text_items) != 2:
         print("\n    error:\'{}\' --> split Len != 2".format(text))
-        return -1, -1
     else:
         key = text_items[0]
         value = text_items[1]
@@ -93,28 +92,30 @@ if __name__ == "__main__":
     else:
         db_filename = "other_SQLite.db"
 
-    users = [f for f in os.listdir(dataset)]
+    print('''Transferring {} to {} '''.format(dataset, db_filename))
+    print()
 
     ''' get user basic info '''
+    users = [f for f in os.listdir(dataset)]
     user_dicts = []
     for user in users:
         user_dicts.append(get_user_dict(dataset, user))
 
-    ''' checking all usr info attributes '''
+    print(''' Checking all usr info attributes.. ''')
     keys_set = set()
     for user_dict in user_dicts:
         # print(user_dict.keys())
         keys_set |= set(user_dict.keys())
-    print(keys_set)
-    print("user has {} attributes".format(len(keys_set)))
+    print(" User has {} attributes: ".format(len(keys_set)), keys_set)
+    print()
 
-    print(''' Making all tables ''')
+    print(''' Building all tables ''')
     os.system("sqlite3 {} < db_schema.sql".format(db_filename))
     conn = sqlite3.connect(db_filename)
     c = conn.cursor()
 
 
-    print(''' Insert user basic user info ''')
+    print(''' Inserting user basic user info.. ''')
     users_insert = []
     for user_dict in user_dicts:
         users_insert.append((user_dict['zid'], user_dict['email'], user_dict['password'],
@@ -123,7 +124,7 @@ if __name__ == "__main__":
                            user_dict['home_suburb'], user_dict['home_longitude'], user_dict['home_latitude']))
     insert_sql = "INSERT INTO USER VALUES (?,?,?, ?,?,?, ?, ?,?,?, '',1)"
     result = c.executemany(insert_sql, users_insert)
-    print("   Totally {} users inserted".format(len(users_insert)))
+    print("   Totally {} users inserted.".format(len(users_insert)))
 
     for user_dict in user_dicts:
         for mate in user_dict['mates']:
@@ -134,16 +135,20 @@ if __name__ == "__main__":
             c.executemany(insert_course_sql, [(user_dict['zid'], course)])
 
 
-    print(''' Transferring Posts Comments replies ''')
+    print(''' Transferring Posts Comments replies.. ''')
     post_id, comment_id, reply_id = 0, 0, 0
-    for user in users:
+    for i, user in enumerate(users):
+        if i%20 == 0:
+            rate = (i+1)*1.0/len(users)*100
+            print("   {0:.1f}%..".format(rate))
+
         ''' Posts '''
         post_dir = "{}/{}/posts".format(dataset, user)
         for post in os.listdir(post_dir):
             post_dict = dataset2dict("{}/{}/post.txt".format(post_dir, post))
             if post_dict:
-                insert_post_sql = "INSERT INTO POST(id, zid, time, latitude, longitude, message) " \
-                                  "VALUES (?, ?, ?, ?, ?, ?)"
+                insert_post_sql = "INSERT INTO POST(id, zid, time, latitude, longitude, message, privacy) " \
+                                  "VALUES (?, ?, ?, ?, ?, ?, 'public')"
                 post_id += 1
                 c.execute(insert_post_sql, [post_id, post_dict["from"], post_dict["time"], post_dict["latitude"], post_dict["longitude"], post_dict["message"]])
             else:
