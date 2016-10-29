@@ -85,14 +85,14 @@ def show_time(time):
     if sub_s < 60:
         time_show = 'Just now'
     elif sub_s/60 < 60:
-        time_show = '{} minutes'.format(sub_s//60)
+        time_show = '{} MINUTES AGO'.format(sub_s//60)
     elif sub_s/60/60 < 24:
         hours = sub_s // 60 // 60
-        time_show = '{} hrs'.format(hours) if hours != 1 else '{} hr'.format(hours)
+        time_show = '{} HOURS AGO'.format(hours) if hours != 1 else '{} HOUR AGO'.format(hours)
     elif sub_s/60/60/24 >= 1:
         day = int(sub_s/60/60/24)
         if day == 1:
-            time_show = 'yesterday'
+            time_show = 'YESTERDAY'
         else:
             time_show = '{} days ago'.format(day)
 

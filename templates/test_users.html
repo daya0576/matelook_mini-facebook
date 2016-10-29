@@ -3,29 +3,58 @@
 
 {% block body %}
     {% if user_info %}
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/profile.css') }}">
+
         <h3>Profile:</h3>
-        <div class="box_top" style="padding-bottom: 15px">
-            <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">
-            <img style="width: 100px; padding-bottom: 15px"
-                 src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
-                 alt="">
-            </a>
-            <br>
+        <div class="box_top">
+            <div style="height: 25px"></div>
+
+            <div class="row">
+                <div style="text-align: center" class="col-md-3">
+                    <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">
+                        <img style="width: 100px; border-radius: 50px; margin-bottom: 20px"
+                             src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/{{ user_info.profile_img }}"
+                             alt="">
+                    </a>
+                </div>
+
+                <div class="col-md-9">
+                    <table class="table">
+                        <tbody>
+                            <tr><td><label>ZID:</label></td><td>{{ user_info.zid }}</td></tr>
+                            <tr><td><label>Fullname:</label></td><td>{{ user_info.full_name }}</td></tr>
+                            <tr><td><label>Email:</label></td><td>{{ user_info.email }}</td></tr>
+                            <tr><td><label>Birthday:</label></td><td>{{ user_info.birthday }}</td></tr>
+                            <tr><td><label>Home Suburb:</label></td><td>{{ user_info.home_suburb }}</td></tr>
+                            <tr><td><label>Program:</label></td><td>{{ user_info.program }}</td></tr>
+                            {% if user_info.profile_text != "" %}
+                                <tr><td><label>Profile Text:</label></td><td>{{ user_info.profile_text }}</td></tr>
+                            {% endif %}
+                            <!--<tr><td colspan="2" style="text-align: center">-->
+                                <!--<a class="btn btn-primary" href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">Edit</a>-->
+                            <!--</td></tr>-->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             {# Private information such as e-mail, password, lat, long and courses should not be displayed. #}
-            <text><label>ZID: </label> {{ user_info.zid }}<br></text>
-            <text><label>Fullname: </label>{{ user_info.full_name }}<br></text>
-            <text><label>Email: </label>{{ user_info.email }}<br></text>
-            <text><label>Birthday: </label>{{ user_info.birthday }}<br></text>
-            <text><label>Home Suburb:</label> {{ user_info.home_suburb }}<br></text>
-            <text><label>Program:</label> {{ user_info.program }}<br></text>
-            {% if user_info.profile_text != "" %}
-                <label>Profile Text: </label><br>
-                {{ user_info.profile_text }}<br>
-            {% endif %}
+            <!--<text><label>ZID: </label> {{ user_info.zid }}<br></text>-->
+            <!--<text><label>Fullname: </label>{{ user_info.full_name }}<br></text>-->
+            <!--<text><label>Email: </label>{{ user_info.email }}<br></text>-->
+            <!--<text><label>Birthday: </label>{{ user_info.birthday }}<br></text>-->
+            <!--<text><label>Home Suburb:</label> {{ user_info.home_suburb }}<br></text>-->
+            <!--<text><label>Program:</label> {{ user_info.program }}<br></text>-->
+            <!--{% if user_info.profile_text != "" %}-->
+                <!--<label>Profile Text: </label><br>-->
+                <!--{{ user_info.profile_text }}<br>-->
+            <!--{% endif %}-->
 
-            <div style="height: 10px"></div>
-            <a href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">Edit</a>
+            <div style="text-align: center">
+                <a class="btn btn-primary" href="{{ url_for('user_edit_profile', user_zid=g.user.zid) }}">Edit</a>
+            </div>
+
+            <div style="height: 20px"></div>
         </div>
 
 
