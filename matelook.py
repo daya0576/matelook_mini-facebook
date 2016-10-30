@@ -406,10 +406,10 @@ def get_post_comments():
 @app.route('/user/<user_zid>')
 def user_profile(user_zid):
     user_info = get_user(zid=user_zid)
-    user_info = add_attr_confirm([user_info])[0]
 
     posts = user_mates = sugg_final = None
     if user_info:
+        user_info = add_attr_confirm([user_info])[0]
         status = 'owner' if g.user['zid'] == user_zid else 'other'
 
         ''' get user basic info '''
