@@ -840,7 +840,7 @@ def allowed_file(filename):
 @login_required
 def user_edit_profile(user_zid):
     user = get_user(zid=user_zid)
-    if request.method == 'POST' and user.zid == g.user['zid']:
+    if request.method == 'POST' and user['zid'] == g.user['zid']:
         full_name = check_input(request.form['full_name'])
         email = check_input(request.form['email'])
 
