@@ -503,7 +503,8 @@ def sign_up():
 
             email_subj = 'Follow the link to complete your account creation.'
             path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            root = request.url_root
+            # root = request.url_root
+            root = ''
             if root[-1] == '/' and path[0] == '/':
                 root = root[:-1]
             email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
