@@ -26,9 +26,9 @@ from itsdangerous import URLSafeTimedSerializer
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
-# EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
-EMAIL_HOST_PASSWORD = "a7198192"
+EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
 EMAIL_PORT = 587
+# EMAIL_PORT = 25
 EMAIL_USE_TLS = True
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -52,8 +52,7 @@ app.config.update(dict(
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
     SITE_NAME='Spring',
-    REQUEST_ROOT='--UNKNOWN--',
-    # SERVER_NAME='(Do not forget to config)'
+    SERVER_NAME='(Do not forget to confige)'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -503,14 +502,13 @@ def sign_up():
                         'default.png', confirmation_key])
 
             email_subj = 'Follow the link to complete your account creation.'
-            email_path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            email_root = app.config['REQUEST_ROOT']
-            # if len(email_path) > 1 and len(email_root) > 1 and\
-            #         email_root[-1] == '/' and email_path[0] == '/':
-            #     email_root = email_root[:-1]
-
-            conf_url = email_path + email_root
-            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(conf_url)
+            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
+            root = request.url_root
+            if root and path \
+                    and len(root)>0 and len(path)>0  \
+                    and root[-1] == '/' and path[0] == '/':
+                root = root[:-1]
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
             send_email(email, email_subj, email_body)
 
             db.commit()
@@ -536,6 +534,9 @@ def sign_up_confirmation(zid, confirmation_key):
         db.execute('''DELETE FROM USER_TO_CONFIRM WHERE zid = ?''', [user_zid])
 
         db.commit()
+
+        session['logged_in'] = user_zid
+
         return redirect(url_for('user_profile', user_zid=zid))
     else:
         return render_template('signup.html', error='Do not try to activate other\'s account.')
