@@ -697,8 +697,8 @@ def post():
         for m_zid in set(re.findall(r'z[0-9]{7}', post_message)):
             m_user = get_user(zid=m_zid)
             if m_user and m_user['email']:
-                email_subj = '{} Mentioned you in his post!!'.format(get_user(user_zid['email']))
-                path = url_for('index')
+                email_subj = '{} Mentioned you in his post!!'.format(g.user['full_name'])
+                path = url_for('index', _external=True)
                 email_body = 'Check the link to check the post: <a href="{0}">{0}</a>'.format(path)
 
                 send_email(m_user['email'], email_subj, email_body)
