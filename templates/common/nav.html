@@ -24,7 +24,7 @@
         {% endif %}
       </ul>
       <form action="{{ url_for('search') }}" class="navbar-form navbar-right">
-        <input type="text" name="suggestion" class="form-control" placeholder="Search..." value="{{ request.args.search }}">
+        <input type="text" name="suggestion" class="form-control" placeholder="Search..." value="{{ request.args.suggestion }}">
       </form>
     </div>
   </div>

@@ -120,12 +120,15 @@ def show_time(time):
     elif sub_s/60/60 < 24:
         hours = sub_s // 60 // 60
         time_show = '{} HOURS AGO'.format(hours) if hours != 1 else '{} HOUR AGO'.format(hours)
-    elif sub_s/60/60/24 >= 1:
+    elif sub_s/60/60/24 < 365:
         day = int(sub_s/60/60/24)
         if day == 1:
             time_show = 'YESTERDAY'
         else:
             time_show = '{} days ago'.format(day)
+    else:
+        year = int(sub_s / 60 / 60 / 24 / 365)
+        time_show = '{} years ago'.format(year) if year != 1 else '{} year ago'.format(year)
 
     return time_show
 
@@ -400,6 +403,8 @@ def get_post_comments():
 @app.route('/user/<user_zid>')
 def user_profile(user_zid):
     user_info = get_user(zid=user_zid)
+    user_info = add_attr_confirm([user_info])[0]
+
     posts = user_mates = sugg_final = None
     if user_info:
         status = 'owner' if g.user['zid'] == user_zid else 'other'
@@ -439,7 +444,7 @@ def user_profile(user_zid):
 
         # count frequency all mates of mates
         c = Counter([mate_of_mate['zid'] for mate_of_mate in mates_of_mates])
-        print(c.most_common())
+        # print(c.most_common())
 
         # save all mates of mates value to dict
         dict_mates_of_mates = {}
@@ -449,12 +454,12 @@ def user_profile(user_zid):
         # print(dict_mates_of_mates.values())
 
         # get final mates zids and filter user and existing friends
-        print("friends: ", [mate['zid'] for mate in user_mates])
+        # print("friends: ", [mate['zid'] for mate in user_mates])
         sugg_final_zid = []
         for m in c.most_common():
             if m[0] != user_zid and m[0] not in [mate['zid'] for mate in user_mates]:
                 sugg_final_zid.append(m)
-        print(sugg_final_zid)
+        # print(sugg_final_zid)
 
         # get final values of suggestion friends,
         sugg_final = []
@@ -565,7 +570,7 @@ def sign_up():
             #         and len(root) > 0 and len(path) > 0  \
             #         and root[-1] == '/' and path[0] == '/':
             #     root = root[:-1]
-            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+'---'+path)
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(path)
             send_email(email, email_subj, email_body)
 
             db.commit()
@@ -653,7 +658,9 @@ def search():
         filtered_search_posts = get_post_comment_count(filtered_search_posts)
 
         for post in filtered_search_posts:
-            post['message'] = post['message'].replace(suggestion, "<strong>{}</strong>".format(suggestion))
+            post['message'] = re.sub(suggestion, "<strong>{}</strong>".format(suggestion),
+                                     post['message'], flags=re.IGNORECASE)
+            # post['message'] = post['message'].replace(suggestion, "<strong>{}</strong>".format(suggestion))
 
         '''format time'''
         for post in filtered_search_posts:
@@ -684,6 +691,17 @@ def post():
         db.execute('INSERT INTO POST (zid, time, message, privacy) values (?, ?, ?, ?)',
                    [user_zid, cur_time_txt, post_message, post_privacy])
         db.commit()
+
+        m = re.match(r'z[\d]{7}', post_message)
+        for m_zid in m.groups():
+            m_user = get_user(zid=m_zid)
+            if m_user and m_user['email']:
+                email_subj = '{} Mentioned you in his post!!'.format(get_user(user_zid['email']))
+                path = url_for('index')
+                email_body = 'Check the link to check the post: <a href="{0}">{0}</a>'.format(path)
+
+                send_email(m_user['email'], email_subj, email_body)
+
     elif request.form['message'] == '' or request.form['message'] is None:
         error = "Post cannot be empty"
 
