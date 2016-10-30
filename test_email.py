@@ -16,22 +16,33 @@ EMAIL_USE_TLS = True
 
 
 def send_email(toaddr, subject, body):
-    fromaddr = EMAIL_HOST_USER
+    # fromaddr = EMAIL_HOST_USER
+    #
+    # msg = MIMEMultipart()
+    # msg['From'] = fromaddr
+    # msg['To'] = toaddr
+    # # msg['Subject'] = "Follow the link to activate your account."
+    # msg['Subject'] = subject
+    #
+    # msg.attach(MIMEText(body, 'html'))
+    #
+    # server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+    # server.starttls()
+    # server.login(fromaddr, EMAIL_HOST_PASSWORD)
+    # text = msg.as_string()
+    # server.sendmail(fromaddr, toaddr, text)
+    # server.quit()
 
-    msg = MIMEMultipart()
-    msg['From'] = fromaddr
-    msg['To'] = toaddr
-    # msg['Subject'] = "Follow the link to activate your account."
+    from_address = "z5082423@unsw.edu.au"
+    # to_address = "daya0576@gmail.com"
+    to_address = toaddr
+    msg = MIMEText(body, 'html')
     msg['Subject'] = subject
-
-    msg.attach(MIMEText(body, 'html'))
-
-    server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-    server.starttls()
-    server.login(fromaddr, EMAIL_HOST_PASSWORD)
-    text = msg.as_string()
-    server.sendmail(fromaddr, toaddr, text)
-    server.quit()
+    msg['From'] = from_address
+    msg['To'] = to_address
+    s = smtplib.SMTP('smtp.cse.unsw.edu.au')
+    s.sendmail(from_address, [to_address], msg.as_string())
+    s.quit()
 
 send_email('daya0576@gmail.com', 'test', 'test')
 
