@@ -52,7 +52,8 @@ app.config.update(dict(
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
     SITE_NAME='Spring',
-    SERVER_NAME='(Do not forget to confige)'
+    REQUEST_ROOT='--UNKNOWN--',
+    # SERVER_NAME='(Do not forget to config)'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -503,7 +504,7 @@ def sign_up():
 
             email_subj = 'Follow the link to complete your account creation.'
             path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            root = app.config['SERVER_NAME']
+            root = app.config['REQUEST_ROOT']
             if root[-1] == '/' and path[0] == '/':
                 root = root[:-1]
             email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
