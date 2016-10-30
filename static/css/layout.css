@@ -137,3 +137,10 @@ body {
 .comments_sum a{
     text-decoration: none;
 }
+
+
+
+.box {
+    padding: 15px;
+    background: white;
+}

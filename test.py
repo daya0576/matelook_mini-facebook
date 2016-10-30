@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+import keys
 
 
 
@@ -44,8 +44,22 @@ def show_time(time):
     return time_show
 
 
+
+
+TIME_ZONE = 'Australia/Sydney'
+
+
 # print(time_date2txt(time_txt2date(time_eg)))
 #
 # print(show_time(time_eg))
 
 print(time_date2txt())
+
+
+
+
+
+
+
+
+

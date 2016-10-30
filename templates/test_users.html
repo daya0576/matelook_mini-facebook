@@ -24,10 +24,13 @@
                             <tr><td><label>ZID:</label></td><td>{{ user_info.zid }}</td></tr>
                             <tr><td><label>Fullname:</label></td><td>{{ user_info.full_name }}</td></tr>
                             <tr><td><label>Email:</label></td><td>{{ user_info.email }}</td></tr>
-                            <tr><td><label>Birthday:</label></td><td>{{ user_info.birthday }}</td></tr>
-                            <tr><td><label>Home Suburb:</label></td><td>{{ user_info.home_suburb }}</td></tr>
-                            <tr><td><label>Program:</label></td><td>{{ user_info.program }}</td></tr>
-                            {% if user_info.profile_text != "" %}
+                            <tr><td><label>Birthday:</label></td>
+                                <td>{% if user_info.birthday %}{{ user_info.birthday }}{% endif %}</td></tr>
+                            <tr><td><label>Home Suburb:</label></td>
+                                <td>{% if user_info.home_suburb %}{{ user_info.home_suburb }}{% endif %}</td></tr>
+                            <tr><td><label>Program:</label></td>
+                                <td>{% if user_info.program %}{{ user_info.program }}{% endif %}</td></tr>
+                            {% if user_info.profile_text and user_info.profile_text != "" %}
                                 <tr><td><label>Profile Text:</label></td><td>{{ user_info.profile_text }}</td></tr>
                             {% endif %}
                             <!--<tr><td colspan="2" style="text-align: center">-->
@@ -60,14 +63,19 @@
 
     {% if status == 'owner' or status == 'other' %}
         <h3>Friends:</h3>
-        {% include 'common/friends.html' %}
+        {% if users %}
+            {% include 'common/friends.html' %}
+        {% else %}
+            <div class="box">No friends yet. T^T</div>
+        {% endif %}
 
 
         <h3>POSTS:</h3>
         {% if posts %}
             {% include 'common/posts.html' %}
         {% else %}
-            <div class="box_top">Nothing new with your friends.</div>
+            <div class="box">Nothing new with your friends.</div>
+            <div style="height: 20px"></div>
         {% endif %}
     {% endif %}
 

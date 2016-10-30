@@ -25,27 +25,13 @@ CREATE TABLE USER (
   'confirmed'      INTEGER
 );
 DROP TABLE IF EXISTS USER_SUSPEND;
-CREATE TABLE USER_SUSPEND (
-  'zid'            TEXT PRIMARY KEY NOT NULL,
-  'email'          TEXT,
-  'password'       TEXT             NOT NULL,
-
-  'full_name'      TEXT,
-  -- 'mates' text,
-  'birthday'       TEXT,
-  'profile_img'    TEXT,
-
-  'program'        TEXT,
-  -- 'courses' text,
-
-  'home_suburb'    TEXT,
-  'home_longitude' TEXT,
-  'home_latitude'  TEXT,
-
-
-  'profile_text'   TEXT,
-  'confirmed'      INTEGER
-);
+CREATE TABLE USER_SUSPEND AS
+  SELECT *
+  FROM USER;
+DROP TABLE IF EXISTS USER_TO_CONFIRM;
+CREATE TABLE USER_TO_CONFIRM AS
+  SELECT *
+  FROM USER;
 
 
 

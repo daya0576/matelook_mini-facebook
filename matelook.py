@@ -8,9 +8,29 @@ from datetime import datetime, timezone
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
+
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.utils import secure_filename
 from functools import wraps
+
+import keys
+# Import smtplib for the actual sending function
+import smtplib
+
+# Import the email modules we'll need
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+from itsdangerous import URLSafeTimedSerializer
+
+import urllib.parse
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'daya0576@gmail.com'
+EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
+EMAIL_PORT = 587
+# EMAIL_PORT = 25
+EMAIL_USE_TLS = True
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 # DB_TYPE = 'small'
@@ -224,6 +244,10 @@ def get_user_suspend(zid=-1, email='-1'):
         return None
 
 
+def get_user_to_confirm(zid=-1):
+    return query_db('SELECT * FROM USER_TO_CONFIRM WHERE zid = ?', [zid], one=True)
+
+
 def get_all_mates(zid):
     mates = query_db('''SELECT * FROM MATES m JOIN USER u ON u.zid = m.mate_zid WHERE m.user_zid = ? ''',
                      [zid])
@@ -234,6 +258,25 @@ def get_all_mates(zid):
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+
+
+def send_email(toaddr, subject, body):
+    fromaddr = EMAIL_HOST_USER
+
+    msg = MIMEMultipart()
+    msg['From'] = fromaddr
+    msg['To'] = toaddr
+    # msg['Subject'] = "Follow the link to activate your account."
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body, 'html'))
+
+    server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+    server.starttls()
+    server.login(fromaddr, EMAIL_HOST_PASSWORD)
+    text = msg.as_string()
+    server.sendmail(fromaddr, toaddr, text)
+    server.quit()
 
 
 @app.before_request
@@ -411,7 +454,7 @@ def login():
         elif user['password'] != password:
             error = 'Invalid password'
         else:
-            flash('You were logged in')
+            # flash('You were logged in')
             session['logged_in'] = user['zid']
             return redirect(url_for('index'))
 
@@ -436,31 +479,62 @@ def sign_up():
         if not request.form['zid']:
             error = 'You have to enter a username'
         elif not request.form['email'] or \
-                '@' not in request.form['email']:
+                        '@' not in request.form['email']:
             error = 'You have to enter a valid email address'
         elif not request.form['password']:
             error = 'You have to enter a password'
         elif request.form['password'] != request.form['password_confirm']:
             error = 'The two passwords do not match'
-        elif get_user(zid=request.form['zid']) is not None:
+        elif get_user(zid=request.form['zid']) is not None \
+                        or get_user_to_confirm(zid=request.form['zid']):
             error = 'The zid is already signed up.'
         elif get_user(email=request.form['email']) is not None:
             error = 'The email is already signed up.'
         else:
             db = get_db()
-            db.execute('''insert into user (zid, email, password, full_name, profile_img, confirmed)
-                          values (?, ?, ?, ?, ?, ?)''',
-                       [request.form['zid'], request.form['email'],
-                        request.form['password'], request.form['fullname'],
-                        'default.png', 0])
+            email = request.form['email']
+            confirmation_key = str(generate_confirmation_token(email))
 
-            # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-            # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
+            db.execute('''INSERT INTO USER_TO_CONFIRM (zid, email, password, full_name, profile_img, confirmed)
+                          VALUES (?, ?, ?, ?, ?, ?)''',
+                       [request.form['zid'], email,
+                        request.form['password'], request.form['fullname'],
+                        'default.png', confirmation_key])
+
+            email_subj = 'Follow the link to complete your account creation.'
+            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
+            root = request.url_root
+            if root[-1] == '/' and path[0] == '/':
+                root = root[:-1]
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
+            send_email(email, email_subj, email_body)
+
             db.commit()
-            flash('You were successfully registered and can login now')
-            session['logged_in'] = request.form['zid']
-            return redirect(url_for('index'))
+            error = 'Click the link in your email to complete account creation.'
+
     return render_template('signup.html', error=error)
+
+
+@app.route('/sign_up/<zid>/<confirmation_key>', methods=['GET'])
+def sign_up_confirmation(zid, confirmation_key):
+    user = get_user_to_confirm(zid)
+    user_zid = zid
+    if user['confirmed'] == confirmation_key:
+        session['logged_in'] = zid
+        db = get_db()
+
+        if get_user(zid=user_zid):
+            db.execute('''DELETE FROM USER WHERE zid = ?''', [user_zid])
+
+        db.execute('''INSERT INTO USER
+                          SELECT * FROM USER_TO_CONFIRM WHERE zid = ?''',
+                   [user_zid])
+        db.execute('''DELETE FROM USER_TO_CONFIRM WHERE zid = ?''', [user_zid])
+
+        db.commit()
+        return redirect(url_for('user_profile', user_zid=zid))
+    else:
+        return render_template('signup.html', error='Do not try to activate other\'s account.')
 
 
 @app.route('/search', methods=['GET'])
@@ -819,7 +893,6 @@ def activate_account():
     db.commit()
 
     return redirect(url_for('user_profile', user_zid=user_zid))
-
 
 
 
