@@ -534,41 +534,42 @@ def sign_up():
         elif get_user(email=request.form['email']) is not None:
             error = 'The email is already signed up.'
         else:
-            # db = get_db()
-            # email = request.form['email']
-            # confirmation_key = str(generate_confirmation_token(email))
-            #
-            # db.execute('''INSERT INTO USER_TO_CONFIRM (zid, email, password, full_name, profile_img, confirmed)
-            #               VALUES (?, ?, ?, ?, ?, ?)''',
-            #            [request.form['zid'], email,
-            #             request.form['password'], request.form['fullname'],
-            #             'default.png', confirmation_key])
-            #
-            # email_subj = 'Follow the link to complete your account creation.'
-            # path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            # root = request.url_root
-            # if root and path \
-            #         and len(root)>0 and len(path)>0  \
-            #         and root[-1] == '/' and path[0] == '/':
-            #     root = root[:-1]
-            # email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
-            # send_email(email, email_subj, email_body)
-            #
-            # db.commit()
-            # error = 'Click the link in your email to complete account creation.'
-
             db = get_db()
-            db.execute('''insert into user (zid, email, password, full_name, profile_img, confirmed)
-                                      values (?, ?, ?, ?, ?, ?)''',
-                       [request.form['zid'], request.form['email'],
-                        request.form['password'], request.form['fullname'],
-                        'default.png', 0])
+            email = request.form['email']
+            confirmation_key = str(generate_confirmation_token(email))
 
-            # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-            # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
+            db.execute('''INSERT INTO USER_TO_CONFIRM (zid, email, password, full_name, profile_img, confirmed)
+                          VALUES (?, ?, ?, ?, ?, ?)''',
+                       [request.form['zid'], email,
+                        request.form['password'], request.form['fullname'],
+                        'default.png', confirmation_key])
+
+            email_subj = 'Follow the link to complete your account creation.'
+            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
+            root = request.url_root
+            if root and path \
+                    and len(root)>0 and len(path)>0  \
+                    and root[-1] == '/' and path[0] == '/':
+                root = root[:-1]
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
+            send_email(email, email_subj, email_body)
+
             db.commit()
-            flash('You were successfully registered and can login now')
-            session['logged_in'] = request.form['zid']
+            error = 'Click the link in your email to complete account creation.'
+
+            # db = get_db()
+            # db.execute('''insert into user (zid, email, password, full_name, profile_img, confirmed)
+            #                           values (?, ?, ?, ?, ?, ?)''',
+            #            [request.form['zid'], request.form['email'],
+            #             request.form['password'], request.form['fullname'],
+            #             'default.png', 0])
+            #
+            # # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+            # # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
+            # db.commit()
+            # flash('You were successfully registered and can login now')
+            # session['logged_in'] = request.form['zid']
+
             return redirect(url_for('user_profile', user_zid=request.form['zid']))
 
     return render_template('signup.html', error=error)
