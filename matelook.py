@@ -34,6 +34,7 @@ EMAIL_USE_TLS = True
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 # DB_TYPE = 'small'
 DB_TYPE = 'medium'
+# DB_TYPE = 'large'
 
 # create our little application :)
 app = Flask(__name__)
@@ -205,7 +206,7 @@ def add_attr_confirm(mates):
                                     [mate['zid'], user_zid], one=True)
 
             if (mate_sent and mate_sent['confirmed'] == 1) \
-                    or (mate_receive and mate_receive['confirmed'] == 1):
+                    and (mate_receive and mate_receive['confirmed'] == 1):
                 mate['relation'] = 'friend'
             elif mate_receive and mate_receive['confirmed'] == 0:
                 mate['relation'] = 'receive'
@@ -427,7 +428,7 @@ def user_profile(user_zid):
 
         # count frequency all mates of mates
         c = Counter([mate_of_mate['zid'] for mate_of_mate in mates_of_mates])
-        # print(c.most_common())
+        print(c.most_common())
 
         # save all mates of mates value to dict
         dict_mates_of_mates = {}
@@ -437,11 +438,12 @@ def user_profile(user_zid):
         # print(dict_mates_of_mates.values())
 
         # get final mates zids and filter user and existing friends
+        print("friends: ", [mate['zid'] for mate in user_mates])
         sugg_final_zid = []
         for m in c.most_common():
-            if m[1] != user_zid and m[0] not in [mate['zid'] for mate in user_mates]:
+            if m[0] != user_zid and m[0] not in [mate['zid'] for mate in user_mates]:
                 sugg_final_zid.append(m)
-        # print(sugg_final_zid)
+        print(sugg_final_zid)
 
         # get final values of suggestion friends,
         sugg_final = []
