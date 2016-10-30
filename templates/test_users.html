@@ -2,8 +2,8 @@
 {% block title %}Profile{% endblock %}
 
 {% block body %}
-    {% if user_info %}
-        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/profile.css') }}">
+    {% if status != 'none' %}
+        <!--<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/profile.css') }}">-->
 
         <h3>Profile:</h3>
         <div class="box_top">
@@ -56,8 +56,9 @@
 
             <div style="height: 20px"></div>
         </div>
+    {% endif %}
 
-
+    {% if status == 'owner' or status == 'other' %}
         <h3>Friends:</h3>
         {% include 'common/friends.html' %}
 
@@ -68,9 +69,48 @@
         {% else %}
             <div class="box_top">Nothing new with your friends.</div>
         {% endif %}
+    {% endif %}
+
+    {% if status == 'owner' %}
+        <div>
+            <a class="btn btn-warning center-block"
+               href="{{ url_for('suspend_account') }}">
+                <lable>Suspend Account</lable>
+            </a>
+        </div>
+    {% elif status == 'suspend' %}
+        <div style="height: 20px"></div>
+        <div>
+            <a class="btn btn-success center-block"
+               href="{{ url_for('activate_account') }}">
+                <lable>Activate Account</lable>
+            </a>
+        </div>
+    {% endif %}
+
+    {% if status == 'owner' %}
+        <div style="height: 20px"></div>
+        <div>
+            <a class="btn btn-danger center-block"
+               href="{{ url_for('delete_account') }}">
+                <lable>Delete Account</lable>
+            </a>
+        </div>
+        <div style="height: 20px"></div>
     {% else %}
-        This user does not exit.
+        <div style="height: 20px"></div>
     {% endif %}
 
 
+
+
+    {% if status == 'none' %}
+        <div class="box_top">
+            <h1>This user does not exist.</h1>
+            <p>What you were looking for is just not there.
+            <p><a href="{{ url_for('index') }}">go somewhere nice</a>
+        </div>
+        <div class="box_bottom"></div>
+    {% endif %}
 {% endblock %}
+

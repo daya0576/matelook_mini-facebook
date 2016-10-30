@@ -138,7 +138,7 @@ if __name__ == "__main__":
     print(''' Transferring Posts Comments replies.. ''')
     post_id, comment_id, reply_id = 0, 0, 0
     for i, user in enumerate(users):
-        if i%20 == 0:
+        if i%10 == 0:
             rate = (i+1)*1.0/len(users)*100
             print("   {0:.1f}%..".format(rate))
 

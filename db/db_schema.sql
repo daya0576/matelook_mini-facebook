@@ -24,6 +24,29 @@ CREATE TABLE USER (
   'profile_text'   TEXT,
   'confirmed'      INTEGER
 );
+DROP TABLE IF EXISTS USER_SUSPEND;
+CREATE TABLE USER_SUSPEND (
+  'zid'            TEXT PRIMARY KEY NOT NULL,
+  'email'          TEXT,
+  'password'       TEXT             NOT NULL,
+
+  'full_name'      TEXT,
+  -- 'mates' text,
+  'birthday'       TEXT,
+  'profile_img'    TEXT,
+
+  'program'        TEXT,
+  -- 'courses' text,
+
+  'home_suburb'    TEXT,
+  'home_longitude' TEXT,
+  'home_latitude'  TEXT,
+
+
+  'profile_text'   TEXT,
+  'confirmed'      INTEGER
+);
+
 
 
 DROP TABLE IF EXISTS MATES;

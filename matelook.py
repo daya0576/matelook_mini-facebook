@@ -10,6 +10,7 @@ from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.utils import secure_filename
+from functools import wraps
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 # DB_TYPE = 'small'
@@ -31,7 +32,7 @@ app.config.update(dict(
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
-    SITE_NAME='Fadebook',
+    SITE_NAME='Spring',
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -58,6 +59,15 @@ def get_db():
     if not hasattr(g, 'sqlite_db'):
         g.sqlite_db = connect_db()
     return g.sqlite_db
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # common functions
@@ -110,8 +120,7 @@ def handle_message(text):
 
     zids = re.findall(r'z[0-9]{7}', text)
     for zid in zids:
-        user = query_db('select * from user where zid = ?',
-                        [zid], one=True)
+        user = get_user(zid=zid)
         if user:
             zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
             text_result = re.sub(zid, zid_html, text_result)
@@ -202,6 +211,19 @@ def get_user(zid=-1, email='-1'):
         return None
 
 
+def get_user_suspend(zid=-1, email='-1'):
+    user = query_db('SELECT * FROM USER_SUSPEND WHERE zid = ? OR email = ?',
+                    [zid, email], one=True)
+    if user:
+        user = dict(user)
+        if user['profile_img'] == '':
+            user['profile_img'] = 'default.png'
+
+        return user
+    else:
+        return None
+
+
 def get_all_mates(zid):
     mates = query_db('''SELECT * FROM MATES m JOIN USER u ON u.zid = m.mate_zid WHERE m.user_zid = ? ''',
                      [zid])
@@ -220,13 +242,18 @@ def before_request():
     if 'logged_in' in session:
         g.user = query_db('select * from user where zid = ?',
                           [session['logged_in']], one=True)
+        if not g.user:
+            g.user = query_db('select * from USER_SUSPEND where zid = ?',
+                              [session['logged_in']], one=True)
 
 
 @app.teardown_appcontext
 def close_db(error):
     """Closes the database again at the end of the request."""
-    if hasattr(g, 'sqlite_db'):
-        g.sqlite_db.close()
+    db = getattr(g, 'sqlite_db', None)
+    if db is not None:
+        print("close db....")
+        db.close()
 
 
 @app.route('/')
@@ -255,12 +282,13 @@ def index():
 
 
 @app.route('/load_more_index')
+@login_required
 def load_more_index():
-    if session.get('logged_in') and request.args.get('post_id_start'):
+    if request.args.get('post_id_start'):
         post_id_start = int(request.args.get('post_id_start'))
         # print("post_id_start", post_id_start)
 
-        user_zid = session['logged_in']
+        user_zid = g.user['zid']
         mate_posts = get_mate_posts(user_zid)
         user_posts = get_user_posts(user_zid)
 
@@ -300,6 +328,7 @@ def get_post_comments_sub(post_id):
 
 
 @app.route('/get_comments')
+@login_required
 def get_post_comments():
     post_id = request.args.get('post_id')
     m = re.match(r"^post_(\d+)$", post_id)
@@ -316,41 +345,48 @@ def get_post_comments():
 @app.route('/user/<user_zid>')
 def user_profile(user_zid):
     user_info = get_user(zid=user_zid)
+    posts = user_mates = None
+    if user_info:
+        status = 'owner' if g.user['zid'] == user_zid else 'other'
 
-    ''' get user basic info '''
-    user_posts = get_user_posts(user_zid)
+        ''' get user basic info '''
+        user_posts = get_user_posts(user_zid)
 
-    ''' get user posts '''
-    posts = user_posts
-    posts = [dict(row) for row in posts]
-    posts = sorted(posts, key=lambda x: x['time'], reverse=True)
-    '''format time'''
-    for post in posts:
-        post['time_show'] = show_time(post['time'])
+        ''' get user posts '''
+        posts = user_posts
+        posts = [dict(row) for row in posts]
+        posts = sorted(posts, key=lambda x: x['time'], reverse=True)
+        '''format time'''
+        for post in posts:
+            post['time_show'] = show_time(post['time'])
 
-    ''' user friends'''
-    user_mates = query_db('''
-        SELECT * FROM MATES m
-        LEFT JOIN USER u ON m.mate_zid = u.zid
-        WHERE m.user_zid = ?''', [user_zid])
-    if user_mates:
-        user_mates = add_attr_confirm(user_mates)
+        ''' user friends'''
+        user_mates = query_db('''
+            SELECT * FROM MATES m
+            LEFT JOIN USER u ON m.mate_zid = u.zid
+            WHERE m.user_zid = ?''', [user_zid])
+        if user_mates:
+            user_mates = add_attr_confirm(user_mates)
 
-    # get all the requests to g.user
-    request_receive = query_db('''
-        SELECT * from (SELECT * FROM MATES WHERE mate_zid=? and confirmed=0) m
-        LEFT JOIN USER u on m.user_zid = u.zid''', [user_zid])
-    request_receive = [dict(row) for row in request_receive]
-    for user in request_receive:
-        user['relation'] = 'receive'
+        # get all the requests to g.user
+        request_receive = query_db('''
+            SELECT * from (SELECT * FROM MATES WHERE mate_zid=? and confirmed=0) m
+            LEFT JOIN USER u on m.user_zid = u.zid''', [user_zid])
+        request_receive = [dict(row) for row in request_receive]
+        for user in request_receive:
+            user['relation'] = 'receive'
 
-    user_mates = request_receive + user_mates
+        user_mates = request_receive + user_mates
+    else:
+        user_info = get_user_suspend(zid=user_zid)
+        if user_info and user_zid == g.user['zid']:
+            status = 'suspend'
+        else:
+            status = 'none'
 
     return render_template('test_users.html',
-                           user_info=user_info,
-                           posts=posts,
-                           users=user_mates,
-                           pos_next_start=-1)
+                           user_info=user_info, posts=posts, users=user_mates,
+                           pos_next_start=-1, status=status)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -366,6 +402,9 @@ def login():
 
         user = query_db('SELECT * FROM USER WHERE zid = ?',
                         [zid], one=True)
+        if user is None:
+            user = query_db('SELECT * FROM USER_SUSPEND WHERE zid = ?',
+                            [zid], one=True)
 
         if user is None:
             error = 'Invalid username'
@@ -382,7 +421,7 @@ def login():
 @app.route('/logout')
 def logout():
     """Logs the user out."""
-    flash('You were logged out')
+    # flash('You were logged out')
     session.pop('logged_in', None)
     return redirect(url_for('index'))
 
@@ -478,10 +517,11 @@ def search():
 
 
 @app.route('/post', methods=['GET', 'POST'])
+@login_required
 def post():
     """Post new message"""
     error = None
-    if session.get('logged_in') and request.method == 'POST'\
+    if request.method == 'POST'\
             and request.form['message'] != '' and request.form['message'] is not None:
         user_zid = session['logged_in']
         post_message = request.form['message']
@@ -500,156 +540,155 @@ def post():
 
 
 @app.route('/new_comment')
+@login_required
 def new_comment():
     """Post new comment"""
-    if session.get('logged_in'):
-        user_zid = session['logged_in']
-        comment = request.args.get('comment')
-        post_id = request.args.get('post_id')
-        cur_time_txt = time_date2txt()
+    user_zid = session['logged_in']
+    comment = request.args.get('comment')
+    post_id = request.args.get('post_id')
+    cur_time_txt = time_date2txt()
 
-        db = get_db()
-        db.execute('INSERT INTO COMMENT (zid, post_id, time, message) values (?, ?, ?, ?)',
-                   [user_zid, post_id, cur_time_txt, comment])
-        db.commit()
+    db = get_db()
+    db.execute('INSERT INTO COMMENT (zid, post_id, time, message) values (?, ?, ?, ?)',
+               [user_zid, post_id, cur_time_txt, comment])
+    db.commit()
 
-        return get_refresh_comments(post_id)
+    return get_refresh_comments(post_id)
 
 
 @app.route('/delete_comment')
+@login_required
 def delete_comment():
     """ Delete a comment"""
-    if session.get('logged_in'):
-        user_zid = session['logged_in']
-        comment_id = request.args.get('comment_id')
+    comment_id = request.args.get('comment_id')
 
-        post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
-        post_id = post["post_id"]
+    post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+    post_id = post["post_id"]
 
-        db = get_db()
-        db.execute('''DELETE FROM REPLY WHERE comment_id = ? ''', [comment_id])
-        db.execute('''DELETE FROM COMMENT WHERE id=?''', [comment_id])
-        db.commit()
+    db = get_db()
+    db.execute('''DELETE FROM REPLY WHERE comment_id = ? ''', [comment_id])
+    db.execute('''DELETE FROM COMMENT WHERE id=?''', [comment_id])
+    db.commit()
 
-        return get_refresh_comments(post_id)
+    return get_refresh_comments(post_id)
 
 
 @app.route('/new_post', methods=['GET', 'POST'])
+@login_required
 def new_reply():
     """Post new reply"""
-    if session.get('logged_in'):
-        user_zid = session['logged_in']
-        reply = request.args.get('reply')
-        comment_id = request.args.get('comment_id')
-        cur_time_txt = time_date2txt()
+    user_zid = session['logged_in']
+    reply = request.args.get('reply')
+    comment_id = request.args.get('comment_id')
+    cur_time_txt = time_date2txt()
 
-        post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
-        post_id = post["post_id"]
+    post = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+    post_id = post["post_id"]
 
-        db = get_db()
-        db.execute('INSERT INTO REPLY (zid, comment_id, time, message) values (?, ?, ?, ?)',
-                   [user_zid, comment_id, cur_time_txt, reply])
-        db.commit()
+    db = get_db()
+    db.execute('INSERT INTO REPLY (zid, comment_id, time, message) values (?, ?, ?, ?)',
+               [user_zid, comment_id, cur_time_txt, reply])
+    db.commit()
 
-        return get_refresh_comments(post_id)
+    return get_refresh_comments(post_id)
 
 
 @app.route('/delete_reply')
+@login_required
 def delete_reply():
     """ Delete a reply"""
-    if session.get('logged_in'):
-        reply_id = request.args.get('reply_id')
+    reply_id = request.args.get('reply_id')
 
-        reply = query_db('SELECT * FROM REPLY WHERE id=?', [reply_id], one=True)
-        comment_id = reply['comment_id']
+    reply = query_db('SELECT * FROM REPLY WHERE id=?', [reply_id], one=True)
+    comment_id = reply['comment_id']
 
-        comment = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
-        post_id = comment["post_id"]
+    comment = query_db('SELECT * FROM COMMENT WHERE id=?', [comment_id], one=True)
+    post_id = comment["post_id"]
 
-        db = get_db()
-        db.execute('''DELETE FROM REPLY WHERE id = ? ''', [reply_id])
-        db.commit()
+    db = get_db()
+    db.execute('''DELETE FROM REPLY WHERE id = ? ''', [reply_id])
+    db.commit()
 
-        return get_refresh_comments(post_id)
+    return get_refresh_comments(post_id)
 
 
 @app.route('/delete_post')
+@login_required
 def delete_post():
     """ Delete a post"""
-    if session.get('logged_in'):
-        post_id = request.args.get('post_id')
+    post_id = request.args.get('post_id')
 
-        db = get_db()
-        result = db.execute('''DELETE FROM POST WHERE id = ? ''', [post_id])
-        db.commit()
+    db = get_db()
+    result = db.execute('''DELETE FROM POST WHERE id = ? ''', [post_id])
+    db.commit()
 
-        return jsonify(return_code=0)
+    return jsonify(return_code=0)
 
 
 @app.route('/add_friend')
+@login_required
 def add_friend():
     """ send add friend request """
-    if session.get('logged_in'):
-        mate_zid = request.args.get('zid')
-        user_zid = g.user['zid']
+    mate_zid = request.args.get('zid')
+    user_zid = g.user['zid']
 
-        if mate_zid != '' and user_zid != '':
-            db = get_db()
-            r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=?', [user_zid, mate_zid], one=True)
+    if mate_zid != '' and user_zid != '':
+        db = get_db()
+        r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=?', [user_zid, mate_zid], one=True)
 
-            if not r:
-                db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
-                           [user_zid, mate_zid, 0])
-                db.commit()
+        if not r:
+            db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
+                       [user_zid, mate_zid, 0])
+            db.commit()
 
-        return jsonify(return_code=0)
+    return jsonify(return_code=0)
 
 
 @app.route('/remove_friend')
+@login_required
 def remove_friend():
     """ remove a friend """
-    if session.get('logged_in'):
-        mate_zid = request.args.get('zid')
-        user_zid = g.user['zid']
+    mate_zid = request.args.get('zid')
+    user_zid = g.user['zid']
 
-        if mate_zid != '' and user_zid != '':
-            db = get_db()
-            r = query_db('SELECT * FROM MATES WHERE (user_zid=? AND mate_zid=?) OR (mate_zid=? AND user_zid=?)',
-                         [user_zid, mate_zid, user_zid, mate_zid], one=True)
+    if mate_zid != '' and user_zid != '':
+        db = get_db()
+        r = query_db('SELECT * FROM MATES WHERE (user_zid=? AND mate_zid=?) OR (mate_zid=? AND user_zid=?)',
+                     [user_zid, mate_zid, user_zid, mate_zid], one=True)
 
-            if r:
-                db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
-                           [user_zid, mate_zid])
-                db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
-                           [mate_zid, user_zid])
-                db.commit()
+        if r:
+            db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
+                       [user_zid, mate_zid])
+            db.execute('DELETE FROM MATES WHERE mate_zid=? AND user_zid=?',
+                       [mate_zid, user_zid])
+            db.commit()
 
-        return jsonify(return_code=0)
+    return jsonify(return_code=0)
 
 
 @app.route('/accept_friend')
+@login_required
 def accept_friend():
     """ accept friend request """
     error = ''
-    if session.get('logged_in'):
-        mate_zid = request.args.get('zid')
-        user_zid = g.user['zid']
+    mate_zid = request.args.get('zid')
+    user_zid = g.user['zid']
 
-        if mate_zid != '' and user_zid != '':
-            db = get_db()
-            r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=? AND confirmed=0',
-                         [mate_zid, user_zid], one=True)
+    if mate_zid != '' and user_zid != '':
+        db = get_db()
+        r = query_db('SELECT * FROM MATES WHERE user_zid=? AND mate_zid=? AND confirmed=0',
+                     [mate_zid, user_zid], one=True)
 
-            if r:
-                db.execute('UPDATE MATES SET confirmed=1 WHERE user_zid=? AND mate_zid=? AND confirmed=0',
-                           [mate_zid, user_zid])
-                db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
-                           [user_zid, mate_zid, 1])
-                db.commit()
-            else:
-                error = 'request does not exit'
+        if r:
+            db.execute('UPDATE MATES SET confirmed=1 WHERE user_zid=? AND mate_zid=? AND confirmed=0',
+                       [mate_zid, user_zid])
+            db.execute('INSERT INTO MATES (user_zid, mate_zid, confirmed) values (?, ?, ?)',
+                       [user_zid, mate_zid, 1])
+            db.commit()
+        else:
+            error = 'request does not exit'
 
-        return jsonify(return_code=0, error=error)
+    return jsonify(return_code=0, error=error)
 
 
 def check_input(text):
@@ -662,10 +701,10 @@ def allowed_file(filename):
 
 
 @app.route('/user/<user_zid>/edit', methods=['GET', 'POST'])
+@login_required
 def user_edit_profile(user_zid):
     user = get_user(zid=user_zid)
-    if request.method == 'POST':
-
+    if request.method == 'POST' and user.zid == g.user['zid']:
         full_name = check_input(request.form['full_name'])
         email = check_input(request.form['email'])
 
@@ -720,6 +759,75 @@ def user_edit_profile(user_zid):
         return redirect(url_for('user_profile', user_zid=user_zid))
     else:
         return render_template('profile_edit.html', user=user)
+
+
+@app.route('/user/delete_account')
+@login_required
+def delete_account():
+    user_zid = g.user['zid']
+
+    db = get_db()
+    db.execute('''DELETE FROM REPLY WHERE zid = ?''', [user_zid])
+    db.execute('''DELETE FROM COMMENT WHERE zid = ?''', [user_zid])
+    db.execute('''DELETE FROM POST WHERE zid = ?''', [user_zid])
+
+    db.execute('''DELETE FROM ENROLLMENT WHERE zid = ?''', [user_zid])
+    db.execute('''DELETE FROM MATES WHERE user_zid = ? OR mate_zid = ?''', [user_zid, user_zid])
+
+    db.execute('''DELETE FROM USER WHERE zid = ? ''', [user_zid])
+
+    db.commit()
+    # print("success")
+
+    return redirect(url_for('logout'))
+
+
+@app.route('/user/suspend_account')
+@login_required
+def suspend_account():
+    user_zid = g.user['zid']
+
+    db = get_db()
+    if get_user_suspend(zid=user_zid):
+        db.execute('''DELETE FROM USER_SUSPEND WHERE zid = ?''', [user_zid])
+
+    db.execute('''INSERT INTO USER_SUSPEND
+                  SELECT * FROM USER WHERE zid = ?''',
+               [user_zid])
+    db.execute('''DELETE FROM USER WHERE zid = ?''', [user_zid])
+
+    db.commit()
+
+    return redirect(url_for('user_profile', user_zid=user_zid))
+
+
+@app.route('/user/activate_account')
+@login_required
+def activate_account():
+    user_zid = g.user['zid']
+
+    db = get_db()
+
+    if get_user(zid=user_zid):
+        db.execute('''DELETE FROM USER WHERE zid = ?''', [user_zid])
+
+    db.execute('''INSERT INTO USER
+                  SELECT * FROM USER_SUSPEND WHERE zid = ?''',
+               [user_zid])
+    db.execute('''DELETE FROM USER_SUSPEND WHERE zid = ?''', [user_zid])
+
+    db.commit()
+
+    return redirect(url_for('user_profile', user_zid=user_zid))
+
+
+
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 
 if __name__ == '__main__':
     app.run()
