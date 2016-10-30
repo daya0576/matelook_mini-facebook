@@ -503,11 +503,14 @@ def sign_up():
                         'default.png', confirmation_key])
 
             email_subj = 'Follow the link to complete your account creation.'
-            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            root = app.config['REQUEST_ROOT']
-            if root[-1] == '/' and path[0] == '/':
-                root = root[:-1]
-            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
+            email_path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
+            email_root = app.config['REQUEST_ROOT']
+            # if len(email_path) > 1 and len(email_root) > 1 and\
+            #         email_root[-1] == '/' and email_path[0] == '/':
+            #     email_root = email_root[:-1]
+
+            conf_url = email_path + email_root
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(conf_url)
             send_email(email, email_subj, email_body)
 
             db.commit()
