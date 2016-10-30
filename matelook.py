@@ -26,9 +26,9 @@ from itsdangerous import URLSafeTimedSerializer
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
-EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
+# EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
+EMAIL_HOST_PASSWORD = "a7198192"
 EMAIL_PORT = 587
-# EMAIL_PORT = 25
 EMAIL_USE_TLS = True
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
