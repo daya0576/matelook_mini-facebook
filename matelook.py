@@ -23,7 +23,6 @@ from email.mime.multipart import MIMEMultipart
 
 from itsdangerous import URLSafeTimedSerializer
 
-import urllib.parse
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
@@ -53,6 +52,7 @@ app.config.update(dict(
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
     SITE_NAME='Spring',
+    SERVER_NAME='(Do not forget to confige)'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -503,8 +503,7 @@ def sign_up():
 
             email_subj = 'Follow the link to complete your account creation.'
             path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            # root = request.url_root
-            root = ''
+            root = app.config['SERVER_NAME']
             if root[-1] == '/' and path[0] == '/':
                 root = root[:-1]
             email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)

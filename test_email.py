@@ -33,6 +33,8 @@ def send_email(toaddr, subject, body):
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
 
+send_email('daya0576@gmail.com', 'test', 'test')
+
 
 from itsdangerous import URLSafeTimedSerializer
 
