@@ -14,7 +14,16 @@
                         <img class="profile_post_img" src="{{ url_for('static', filename='user/') }}{{ config['PROFILE_IMG_DIR'] }}/default.png">
                     {% endif %}
                 </a>
-                <div class="full_name"><strong><a href="{{ url_for('user_profile', user_zid=user.zid) }}">{{ user.full_name }}</a></strong></div>
+                <div class="full_name">
+                    <strong><a href="{{ url_for('user_profile', user_zid=user.zid) }}">{{ user.full_name }}</a></strong>
+                    <br>
+                    <!--<small>You have {{ user.common_f }} mutual friends!</small>-->
+                    {% if user.common_f %}
+                        <small style="display: block; margin-bottom: -3px; color: grey">
+                            You have {{ user.common_f }} mutual friends!
+                        </small>
+                    {% endif %}
+                </div>
                 <div class="add_friend">
                     {% if user.zid == g.user.zid %}
                     {% elif user.relation == 'friend' %}

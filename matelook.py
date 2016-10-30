@@ -22,7 +22,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from itsdangerous import URLSafeTimedSerializer
-
+from collections import Counter
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
@@ -52,7 +52,7 @@ app.config.update(dict(
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
     SITE_NAME='Spring',
-    SERVER_NAME='(Do not forget to confige)'
+    # SERVER_NAME='(Do not forget to confige)'
 ))
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
@@ -388,7 +388,7 @@ def get_post_comments():
 @app.route('/user/<user_zid>')
 def user_profile(user_zid):
     user_info = get_user(zid=user_zid)
-    posts = user_mates = None
+    posts = user_mates = sugg_final = None
     if user_info:
         status = 'owner' if g.user['zid'] == user_zid else 'other'
 
@@ -411,10 +411,51 @@ def user_profile(user_zid):
         if user_mates:
             user_mates = add_attr_confirm(user_mates)
 
+        ''' friends suggestion '''
+        a = datetime.now()
+        # get all mates of mates
+        mates_of_mates = []
+        for mate in user_mates:
+            mates_of_mate = query_db('''
+                        SELECT * FROM MATES m
+                        LEFT JOIN USER u ON m.mate_zid = u.zid
+                        WHERE m.user_zid = ?''', [mate['zid']])
+            mates_of_mate = [dict(row) for row in mates_of_mate]
+            # mates_of_mate_zid = [mate_of_mate['zid'] for mate_of_mate in mates_of_mate]
+            mates_of_mates += mates_of_mate
+        b = datetime.now()
+
+        # count frequency all mates of mates
+        c = Counter([mate_of_mate['zid'] for mate_of_mate in mates_of_mates])
+        print(c.most_common())
+
+        # save all mates of mates value to dict
+        dict_mates_of_mates = {}
+        for mate_of_mate in mates_of_mates:
+            dict_mates_of_mates[mate_of_mate['zid']] = dict(mate_of_mate)
+        print(dict_mates_of_mates.keys())
+        print(dict_mates_of_mates.values())
+
+        # get final mates zids and filter user and existing friends
+        sugg_final_zid = []
+        for m in c.most_common():
+            if m[1] != user_zid and m[0] not in [mate['zid'] for mate in user_mates]:
+                sugg_final_zid.append(m)
+        print(sugg_final_zid)
+
+        # get final values of suggestion friends,
+        sugg_final = []
+        for m in sugg_final_zid[:10]:
+            mate = dict_mates_of_mates[m[0]]
+            mate['common_f'] = m[1]
+            sugg_final.append(mate)
+
+        sugg_final = add_attr_confirm(sugg_final)
+
         # get all the requests to g.user
         request_receive = query_db('''
-            SELECT * from (SELECT * FROM MATES WHERE mate_zid=? and confirmed=0) m
-            LEFT JOIN USER u on m.user_zid = u.zid''', [user_zid])
+                    SELECT * from (SELECT * FROM MATES WHERE mate_zid=? and confirmed=0) m
+                    LEFT JOIN USER u on m.user_zid = u.zid''', [user_zid])
         request_receive = [dict(row) for row in request_receive]
         for user in request_receive:
             user['relation'] = 'receive'
@@ -429,7 +470,7 @@ def user_profile(user_zid):
 
     return render_template('test_users.html',
                            user_info=user_info, posts=posts, users=user_mates,
-                           pos_next_start=-1, status=status)
+                           pos_next_start=-1, status=status, users_suggestion=sugg_final)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -491,28 +532,42 @@ def sign_up():
         elif get_user(email=request.form['email']) is not None:
             error = 'The email is already signed up.'
         else:
+            # db = get_db()
+            # email = request.form['email']
+            # confirmation_key = str(generate_confirmation_token(email))
+            #
+            # db.execute('''INSERT INTO USER_TO_CONFIRM (zid, email, password, full_name, profile_img, confirmed)
+            #               VALUES (?, ?, ?, ?, ?, ?)''',
+            #            [request.form['zid'], email,
+            #             request.form['password'], request.form['fullname'],
+            #             'default.png', confirmation_key])
+            #
+            # email_subj = 'Follow the link to complete your account creation.'
+            # path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
+            # root = request.url_root
+            # if root and path \
+            #         and len(root)>0 and len(path)>0  \
+            #         and root[-1] == '/' and path[0] == '/':
+            #     root = root[:-1]
+            # email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
+            # send_email(email, email_subj, email_body)
+            #
+            # db.commit()
+            # error = 'Click the link in your email to complete account creation.'
+
             db = get_db()
-            email = request.form['email']
-            confirmation_key = str(generate_confirmation_token(email))
-
-            db.execute('''INSERT INTO USER_TO_CONFIRM (zid, email, password, full_name, profile_img, confirmed)
-                          VALUES (?, ?, ?, ?, ?, ?)''',
-                       [request.form['zid'], email,
+            db.execute('''insert into user (zid, email, password, full_name, profile_img, confirmed)
+                                      values (?, ?, ?, ?, ?, ?)''',
+                       [request.form['zid'], request.form['email'],
                         request.form['password'], request.form['fullname'],
-                        'default.png', confirmation_key])
+                        'default.png', 0])
 
-            email_subj = 'Follow the link to complete your account creation.'
-            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            root = request.url_root
-            if root and path \
-                    and len(root)>0 and len(path)>0  \
-                    and root[-1] == '/' and path[0] == '/':
-                root = root[:-1]
-            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
-            send_email(email, email_subj, email_body)
-
+            # serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+            # db.execute('''INSERT INTO USER_TO_CONFIRM VALUES (?, ?)''', [request.form['zid'], serializer])
             db.commit()
-            error = 'Click the link in your email to complete account creation.'
+            flash('You were successfully registered and can login now')
+            session['logged_in'] = request.form['zid']
+            return redirect(url_for('user_profile', user_zid=request.form['zid']))
 
     return render_template('signup.html', error=error)
 

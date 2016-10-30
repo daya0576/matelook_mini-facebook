@@ -61,6 +61,18 @@
         </div>
     {% endif %}
 
+
+    {% if status == 'owner' %}
+        <h3>People You May Know:</h3>
+        {% if users_suggestion %}
+            {% with users=users_suggestion %}
+                {% include 'common/friends.html' %}
+            {% endwith %}
+        {% else %}
+            <div class="box">No suggestion yet. T^T</div>
+        {% endif %}
+    {% endif %}
+
     {% if status == 'owner' or status == 'other' %}
         <h3>Friends:</h3>
         {% if users %}
