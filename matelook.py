@@ -556,13 +556,16 @@ def sign_up():
                         'default.png', confirmation_key])
 
             email_subj = 'Follow the link to complete your account creation.'
-            path = url_for('sign_up_confirmation', zid=request.form['zid'], confirmation_key=confirmation_key)
-            root = request.url_root
-            if root and path \
-                    and len(root)>0 and len(path)>0  \
-                    and root[-1] == '/' and path[0] == '/':
-                root = root[:-1]
-            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+path)
+            path = url_for('sign_up_confirmation',
+                           zid=request.form['zid'], confirmation_key=confirmation_key,
+                           _external=True)
+
+            # root = request.url_root
+            # if root and path \
+            #         and len(root) > 0 and len(path) > 0  \
+            #         and root[-1] == '/' and path[0] == '/':
+            #     root = root[:-1]
+            email_body = 'Here is the link: <a href="{0}">{0}</a>'.format(root+'---'+path)
             send_email(email, email_subj, email_body)
 
             db.commit()
@@ -581,7 +584,7 @@ def sign_up():
             # flash('You were successfully registered and can login now')
             # session['logged_in'] = request.form['zid']
 
-            return redirect(url_for('user_profile', user_zid=request.form['zid']))
+            # return redirect(url_for('user_profile', user_zid=request.form['zid']))
 
     return render_template('signup.html', error=error)
 
