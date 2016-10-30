@@ -60,6 +60,7 @@ print(time_date2txt())
 
 
 
-
-
-
+import re
+msg = 'z5014753z5014753z5014753'
+m = re.findall(r'z[0-9]{7}', msg)
+print(m)

@@ -143,7 +143,7 @@ def handle_message(text):
     text_result = re.sub(r'\\n', '<br>', text_result)
 
     zids = re.findall(r'z[0-9]{7}', text)
-    for zid in zids:
+    for zid in set(zids):
         user = get_user(zid=zid)
         if user:
             zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
@@ -172,7 +172,9 @@ def get_user_posts(user_zid):
                              FROM POST p JOIN USER u ON u.zid=p.zid
                              WHERE u.zid = ? ORDER BY time DESC''',
                           [user_zid])
+
     user_posts = get_post_comment_count(user_posts)
+
     return user_posts
 
 
@@ -692,8 +694,7 @@ def post():
                    [user_zid, cur_time_txt, post_message, post_privacy])
         db.commit()
 
-        m = re.match(r'z[\d]{7}', post_message)
-        for m_zid in m.groups():
+        for m_zid in set(re.findall(r'z[0-9]{7}', post_message)):
             m_user = get_user(zid=m_zid)
             if m_user and m_user['email']:
                 email_subj = '{} Mentioned you in his post!!'.format(get_user(user_zid['email']))
