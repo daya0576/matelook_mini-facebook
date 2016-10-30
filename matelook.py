@@ -295,7 +295,7 @@ def close_db(error):
     """Closes the database again at the end of the request."""
     db = getattr(g, 'sqlite_db', None)
     if db is not None:
-        print("close db....")
+        # print("close db....")
         db.close()
 
 
@@ -427,21 +427,21 @@ def user_profile(user_zid):
 
         # count frequency all mates of mates
         c = Counter([mate_of_mate['zid'] for mate_of_mate in mates_of_mates])
-        print(c.most_common())
+        # print(c.most_common())
 
         # save all mates of mates value to dict
         dict_mates_of_mates = {}
         for mate_of_mate in mates_of_mates:
             dict_mates_of_mates[mate_of_mate['zid']] = dict(mate_of_mate)
-        print(dict_mates_of_mates.keys())
-        print(dict_mates_of_mates.values())
+        # print(dict_mates_of_mates.keys())
+        # print(dict_mates_of_mates.values())
 
         # get final mates zids and filter user and existing friends
         sugg_final_zid = []
         for m in c.most_common():
             if m[1] != user_zid and m[0] not in [mate['zid'] for mate in user_mates]:
                 sugg_final_zid.append(m)
-        print(sugg_final_zid)
+        # print(sugg_final_zid)
 
         # get final values of suggestion friends,
         sugg_final = []
@@ -646,7 +646,7 @@ def search():
                                users=search_users, posts=filtered_search_posts, pos_next_start=-1)
 
     else:
-        print("no suggestion")
+        # print("no suggestion")
         return
 
 
