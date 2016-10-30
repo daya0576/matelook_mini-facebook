@@ -7,4 +7,6 @@ __pycache__
 dataset*
 .idea
 ven
-*.db
+db/*.db
+
+
