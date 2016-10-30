@@ -140,13 +140,14 @@ def handle_message(text):
         return '.'
 
     text_result = re.sub(r'<', '&lt', text_result)
+    text_result = re.sub(r'>', '&gt', text_result)
     text_result = re.sub(r'\\n', '<br>', text_result)
 
     zids = re.findall(r'z[0-9]{7}', text)
     for zid in set(zids):
         user = get_user(zid=zid)
         if user:
-            zid_html = '<a target="_blank" href="/user/{}">{}</a>'.format(zid, user['full_name'])
+            zid_html = '<a target="_blank" href="{}">{}</a>'.format(url_for('user_profile', user_zid=zid), user['full_name'])
             text_result = re.sub(zid, zid_html, text_result)
         else:
             pass
@@ -698,7 +699,8 @@ def post():
             m_user = get_user(zid=m_zid)
             if m_user and m_user['email']:
                 email_subj = '{} Mentioned you in his post!!'.format(g.user['full_name'])
-                path = url_for('index', _external=True)
+                path = url_for('search', _external=True)+'?suggestion={}'.format(m_zid)
+                print(path)
                 email_body = 'Check the link to check the post: <a href="{0}">{0}</a>'.format(path)
 
                 send_email(m_user['email'], email_subj, email_body)
