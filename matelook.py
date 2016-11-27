@@ -24,6 +24,12 @@ from email.mime.multipart import MIMEMultipart
 from itsdangerous import URLSafeTimedSerializer
 from collections import Counter
 
+import time
+import atexit
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
 EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
@@ -993,12 +999,28 @@ def activate_account():
     return redirect(url_for('user_profile', user_zid=user_zid))
 
 
-
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
 
 
+from wings_vote.vote_count_all import get_data
+def print_date_time():
+    get_data()
+    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
+
+scheduler = BackgroundScheduler()
+scheduler.start()
+scheduler.add_job(
+    func=print_date_time,
+    trigger=IntervalTrigger(seconds=60*30),
+    id='printing_job',
+    name='Print date and time every five seconds',
+    replace_existing=True)
+# Shut down the scheduler when exiting the app
+atexit.register(lambda: scheduler.shutdown())
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, threaded=True)
+
