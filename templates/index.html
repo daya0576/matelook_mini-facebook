@@ -4,18 +4,12 @@
 {% block body %}
     {% if session['logged_in'] %}
         {% include 'common/new_post.html' %}
-
         {% if posts %}
             {% include 'common/posts.html' %}
         {% else %}
             Unbelievable.  No posts here so far
         {% endif %}
-
-    {% else %}
-        {% include 'common/register.html' %}
     {% endif %}
-
-
     <script src="{{ url_for('static', filename='js/new_post.js') }}"></script>
 
 {% endblock %}

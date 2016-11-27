@@ -33,8 +33,8 @@ EMAIL_USE_TLS = True
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 # DB_TYPE = 'small'
-DB_TYPE = 'medium'
-# DB_TYPE = 'large'
+# DB_TYPE = 'medium'
+DB_TYPE = 'large'
 
 # create our little application :)
 app = Flask(__name__)
