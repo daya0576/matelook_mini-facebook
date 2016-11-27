@@ -6,7 +6,6 @@ vgcore.*
 __pycache__
 dataset*
 .idea
-ven
 db/*.db
 keys.py
 
