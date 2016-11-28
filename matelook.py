@@ -1007,7 +1007,7 @@ def initialize():
     import atexit
 
     from wings_vote.vote_count_all import get_data
-    get_data('wings_vote/vote_trend_all')
+    get_data(os.path.join(app.root_path, 'wings_vote/vote_trend_all'))
 
     scheduler = BackgroundScheduler()
     scheduler.start()
