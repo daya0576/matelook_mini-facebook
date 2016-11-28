@@ -8,4 +8,4 @@ dataset*
 .idea
 db/*.db
 keys.py
-
+ven/
