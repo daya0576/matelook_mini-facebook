@@ -1012,7 +1012,7 @@ def print_date_time():
 scheduler = BackgroundScheduler()
 scheduler.start()
 scheduler.add_job(
-    func=print_date_time,
+    func=get_data,
     trigger=IntervalTrigger(seconds=60*30),
     id='printing_job',
     name='Print date and time every five seconds',

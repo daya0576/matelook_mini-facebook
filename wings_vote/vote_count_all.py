@@ -74,20 +74,20 @@ def get_data():
             json.dump(final_result, f)
 
 
-if __name__ == '__main__':
-    while True:
-        html_result = get_html(vote_url)
-        # print(html_result[0])
-        final_result = get_final_data(html_result)
-        print(final_result)
-
-        bj_dt = get_bj_time()
-        file_name = os.path.join('vote_trend_all', str(bj_dt))
-        if not os.path.exists(file_name):
-            with open(file_name, 'w') as f:
-                json.dump(final_result, f)
-
-        time.sleep(60 * 30)
+# if __name__ == '__main__':
+#     while True:
+#         html_result = get_html(vote_url)
+#         # print(html_result[0])
+#         final_result = get_final_data(html_result)
+#         print(final_result)
+#
+#         bj_dt = get_bj_time()
+#         file_name = os.path.join('vote_trend_all', str(bj_dt))
+#         if not os.path.exists(file_name):
+#             with open(file_name, 'w') as f:
+#                 json.dump(final_result, f)
+#
+#         time.sleep(60 * 30)
 
 
 
