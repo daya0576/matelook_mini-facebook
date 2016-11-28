@@ -1007,15 +1007,15 @@ def initialize():
     import atexit
 
     from wings_vote.vote_count_all import get_data
-    get_data()
+    get_data('wings_vote/vote_trend_all')
 
     scheduler = BackgroundScheduler()
     scheduler.start()
     scheduler.add_job(
         func=get_data,
         trigger=IntervalTrigger(seconds=60 * 30),
-        id='printing_job',
-        name='Print date and time every five seconds',
+        id='vote_recording',
+        name='Recording voting data',
         replace_existing=True)
     # Shut down the scheduler when exiting the app
     atexit.register(lambda: scheduler.shutdown())

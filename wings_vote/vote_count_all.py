@@ -57,14 +57,13 @@ def get_bj_time():
     return bj_dt
 
 
-def get_data():
+def get_data(data_dir="wings_vote/vote_trend_all"):
     html_result = get_html(vote_url)
     final_result = get_final_data(html_result)
     print(final_result)
 
     bj_dt = get_bj_time()
 
-    data_dir = 'vote_trend_all'
     if not os.path.exists(data_dir):
         os.mkdir(data_dir)
 
