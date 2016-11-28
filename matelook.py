@@ -24,11 +24,6 @@ from email.mime.multipart import MIMEMultipart
 from itsdangerous import URLSafeTimedSerializer
 from collections import Counter
 
-import time
-import atexit
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
@@ -58,6 +53,7 @@ app.config.update(dict(
     PASSWORD='default',
     TEMPLATES_AUTO_RELOAD=True,
     DEBUG=True,
+    use_reloader=False,
     SITE_NAME='Spring',
     # SERVER_NAME='(Do not forget to confige)'
 ))
@@ -1003,22 +999,26 @@ def activate_account():
 def page_not_found(e):
     return render_template('404.html'), 404
 
+@app.before_first_request
+def initialize():
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.triggers.interval import IntervalTrigger
+    import time
+    import atexit
 
-from wings_vote.vote_count_all import get_data
-def print_date_time():
+    from wings_vote.vote_count_all import get_data
     get_data()
-    print(time.strftime("%A, %d. %B %Y %I:%M:%S %p"))
 
-scheduler = BackgroundScheduler()
-scheduler.start()
-scheduler.add_job(
-    func=get_data,
-    trigger=IntervalTrigger(seconds=60*30),
-    id='printing_job',
-    name='Print date and time every five seconds',
-    replace_existing=True)
-# Shut down the scheduler when exiting the app
-atexit.register(lambda: scheduler.shutdown())
+    scheduler = BackgroundScheduler()
+    scheduler.start()
+    scheduler.add_job(
+        func=get_data,
+        trigger=IntervalTrigger(seconds=60 * 30),
+        id='printing_job',
+        name='Print date and time every five seconds',
+        replace_existing=True)
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
 
 
 if __name__ == '__main__':
