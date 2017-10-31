@@ -1,1 +1,0 @@
-/home/henry/term2/6714/miniconda3/lib/python3.5/operator.py

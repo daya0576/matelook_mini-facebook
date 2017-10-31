@@ -13,7 +13,6 @@ from itsdangerous import URLSafeTimedSerializer
 from werkzeug.utils import secure_filename
 from functools import wraps
 
-import keys
 # Import smtplib for the actual sending function
 import smtplib
 
@@ -27,7 +26,7 @@ from collections import Counter
 
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'daya0576@gmail.com'
-EMAIL_HOST_PASSWORD = keys.G_EMAIL_KEY
+EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 587
 # EMAIL_PORT = 25
 EMAIL_USE_TLS = True
@@ -341,7 +340,9 @@ def index():
                                load_more_from='index',
                                new_post_error=request.args.get('new_post_error'))
     else:
-        return redirect(url_for('login'))
+        # login demo user automatically
+        session['logged_in'] = 'z5132843'
+        return redirect(url_for('index'))
 
 
 @app.route('/load_more_index')
@@ -530,7 +531,7 @@ def logout():
     """Logs the user out."""
     # flash('You were logged out')
     session.pop('logged_in', None)
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 
 @app.route('/sign_up', methods=['GET', 'POST'])
@@ -999,28 +1000,27 @@ def activate_account():
 def page_not_found(e):
     return render_template('404.html'), 404
 
-@app.before_first_request
-def initialize():
-    from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.triggers.interval import IntervalTrigger
-    import time
-    import atexit
-
-    from wings_vote.vote_count_all import get_data
-    get_data(os.path.join(app.root_path, 'wings_vote/vote_trend_all'))
-
-    scheduler = BackgroundScheduler()
-    scheduler.start()
-    scheduler.add_job(
-        func=get_data,
-        trigger=IntervalTrigger(seconds=60 * 30),
-        id='vote_recording',
-        name='Recording voting data',
-        replace_existing=True)
-    # Shut down the scheduler when exiting the app
-    atexit.register(lambda: scheduler.shutdown())
+# @app.before_first_request
+# def initialize():
+#     from apscheduler.schedulers.background import BackgroundScheduler
+#     from apscheduler.triggers.interval import IntervalTrigger
+#     import time
+#     import atexit
+#
+#     get_data(os.path.join(app.root_path, 'wings_vote/vote_trend_all'))
+#
+#     scheduler = BackgroundScheduler()
+#     scheduler.start()
+#     scheduler.add_job(
+#         func=get_data,
+#         trigger=IntervalTrigger(seconds=60 * 30),
+#         id='vote_recording',
+#         name='Recording voting data',
+#         replace_existing=True)
+#     # Shut down the scheduler when exiting the app
+#     atexit.register(lambda: scheduler.shutdown())
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, threaded=True)
+    app.run(host="0.0.0.0", port=5002, threaded=True)
 
